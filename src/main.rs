@@ -15,6 +15,7 @@
  */
 
 #[macro_use] extern crate clap;
+extern crate rand;
 
 mod bef93;
 
@@ -38,7 +39,7 @@ fn cli() -> Result<(), Box<error::Error>> {
     let matches = clap::App::new(crate_name!())
         .version(crate_version!())
         .author(crate_authors!())
-        .about("A Befunge-93 interpreter")
+        .about("A Befunge-93 interpreter supporting an extended grid")
         .arg(
             clap::Arg::with_name("FILE")
                 .help("A file with Befunge-93 source code")
@@ -46,23 +47,37 @@ fn cli() -> Result<(), Box<error::Error>> {
         )
         .get_matches_safe()?;
     
-    let file_contents = get_file_contents(matches.value_of("FILE").unwrap())?;
+    let resolved_filepath = resolve_filepath(matches.value_of("FILE").unwrap())?;
+    
+    // Check if the file has a '.bf' or '.b93' extension
+    match resolved_filepath.extension() {
+        Some(extension) => {
+            if !(extension == "bf" || extension == "b93") {
+                return Err("The file extension of the passed file was not '.bf' or '.b93'!".into());
+            }
+        }
+        None => return Err("The file extension of the passed file was not found!".into()),
+    }
+    
+    let file_contents = read_to_string(resolved_filepath)?;
+    
+    println!("{}", bef93::interpret(&file_contents)?);
     
     Ok(())
 }
 
-fn get_file_contents(passed_argument: &str) -> Result<String, Box<error::Error>> {
-    let mut resolved_path = PathBuf::from(passed_argument);
+fn resolve_filepath(path: &str) -> Result<PathBuf, Box<error::Error>> {
+    let mut result = PathBuf::from(path);
     
-    if !resolved_path.exists() || !resolved_path.is_file() {
-        resolved_path = current_dir()?;
-        resolved_path.push(passed_argument);
+    if !result.exists() || !result.is_file() {
+        result = current_dir()?;
+        result.push(path);
         
-        if !resolved_path.exists() || !resolved_path.is_file() {
+        if !result.exists() || !result.is_file() {
             return Err(io::Error::new(io::ErrorKind::NotFound,
-                "The passed file is either not a file or does not exist!").into());
+                "The passed path does not exist or does not refer to a file!").into());
         }
     }
-
-    Ok(read_to_string(resolved_path)?)
+    
+    Ok(result)
 }
