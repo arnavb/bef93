@@ -34,14 +34,9 @@ enum Mode {
 }
 
 #[derive(Debug)]
-struct Position {
+struct Coord {
     x: usize,
     y: usize,
-}
-
-pub struct Interpreter {
-    stack: Vec<i32>,
-    direction: Direction,
 }
 
 pub fn interpret(code: &str) -> Result<String, Box<error::Error>> {
@@ -49,17 +44,19 @@ pub fn interpret(code: &str) -> Result<String, Box<error::Error>> {
         .map(|s| s.chars().collect::<Vec<char>>())
         .collect::<Vec<Vec<char>>>();
     
-    let playfield_width = playfield.iter().max_by_key(|r| r.len()).unwrap().len();
-    let playfield_height = playfield.len();
+    let playfield_dimensions = Coord {
+        x: playfield.iter().max_by_key(|r| r.len()).unwrap().len(),
+        y: playfield.len(),
+    };
     
-    if playfield_width > 80 || playfield_height > 25 {
+    if playfield_dimensions.x > 80 || playfield_dimensions.y > 25 {
         return Err("Befunge-93 Programs MUST be within 80x25 characters!".into());
     }
     
     let mut stack: Vec<i32> = Vec::new();
     let mut mode = Mode::Command;
     let mut direction = Direction::Right;
-    let mut position = Position { x: 0, y: 0 };
+    let mut position = Coord { x: 0, y: 0 };
     let mut curr_char = playfield[position.y][position.x];
     
     let mut output = String::new();
@@ -69,6 +66,8 @@ pub fn interpret(code: &str) -> Result<String, Box<error::Error>> {
     
         if mode == Mode::Bridge {
             mode = Mode::Command;
+            position = update_position(&direction, &position, &playfield_dimensions);
+            curr_char = playfield[position.y][position.x];
             continue;
         } else if mode == Mode::String {
             if curr_char == '"' {
@@ -76,6 +75,8 @@ pub fn interpret(code: &str) -> Result<String, Box<error::Error>> {
             } else {
                 stack.push(curr_char as i32);
             }
+            position = update_position(&direction, &position, &playfield_dimensions);
+            curr_char = playfield[position.y][position.x];
             continue;
         }
     
@@ -187,13 +188,15 @@ pub fn interpret(code: &str) -> Result<String, Box<error::Error>> {
                 stack.pop();
             }
             
-            // Output top of stack as integer
-            '.' => output += &stack.pop().unwrap_or(0).to_string(),
+            // Output top of stack as integer with space
+            '.' => output += &format!("{} ", stack.pop().unwrap_or(0).to_string()),
             
             // Output top of stack as char
             ',' => {
                 let value = stack.pop().unwrap_or(0);
-                // TODO: Convert i32 to char and push it to output
+                // if value < 0 {
+                //     return Err("ASCII values must at least be 0!".into());
+                // }
             }
             
             // Bridge (skips the next command)
@@ -203,23 +206,31 @@ pub fn interpret(code: &str) -> Result<String, Box<error::Error>> {
             
             _ => return Err(format!("An unexpected character {} was found!", curr_char).into()),
         }
-        
-        match direction {
-            Direction::Up => {
-                position.y = position.y - 1 % playfield_height;
-            }
-            Direction::Down => {
-                position.y = position.y + 1 % playfield_height;
-            }
-            Direction::Left => {
-                position.x = position.x - 1 % playfield_width;
-            }
-            Direction::Right => {
-                position.x = position.x + 1 % playfield_width;
-            }
-        }
+        println!("The stack contains: {:?}", stack);
+        position = update_position(&direction, &position, &playfield_dimensions);
         curr_char = playfield[position.y][position.x];
     }
 
     Ok(output)
+}
+
+fn update_position(direction: &Direction, position: &Coord, playfield_dimensions: &Coord) -> Coord {
+    match direction {
+        Direction::Up => Coord {
+            x: position.x,
+            y: position.y - 1 % playfield_dimensions.y,
+        },
+        Direction::Down => Coord {
+            x: position.x,
+            y: position.y + 1 % playfield_dimensions.y,
+        },
+        Direction::Left => Coord {
+            x: position.x - 1 % playfield_dimensions.x,
+            y: position.y,
+        },
+        Direction::Right => Coord {
+            x: position.x + 1 % playfield_dimensions.x,
+            y: position.y,
+        },
+    }
 }
