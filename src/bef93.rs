@@ -17,6 +17,7 @@
 use rand::{thread_rng, Rng};
 
 use std::{io, error};
+use std::io::Write;
 
 #[derive(Debug)]
 pub enum Direction {
@@ -35,8 +36,8 @@ enum Mode {
 
 #[derive(Debug)]
 struct Coord {
-    x: usize,
-    y: usize,
+    x: i64,
+    y: i64,
 }
 
 pub fn interpret(code: &str) -> Result<(), Box<error::Error>> {
@@ -53,15 +54,15 @@ pub fn interpret(code: &str) -> Result<(), Box<error::Error>> {
         .collect::<Vec<Vec<char>>>();
     
     let playfield_dimensions = Coord {
-        x: playfield_width,
-        y: playfield.len(),
+        x: playfield_width as i64,
+        y: playfield.len() as i64,
     };
     
     let mut stack: Vec<i64> = Vec::new();
     let mut mode = Mode::Command;
     let mut direction = Direction::Right;
     let mut position = Coord { x: 0, y: 0 };
-    let mut curr_char = playfield[position.y][position.x];
+    let mut curr_char = playfield[position.y as usize][position.x as usize];
     
     let mut rng = thread_rng();
     
@@ -122,10 +123,16 @@ pub fn interpret(code: &str) -> Result<(), Box<error::Error>> {
                     '"' => mode = Mode::String,
                     
                     // Pop and output as integer with space
-                    '.' => println!("{} ", stack.pop().unwrap_or(0)),
+                    '.' => {
+                        print!("{} ", stack.pop().unwrap_or(0));
+                        io::stdout().flush()?;
+                    },
                     
                     // Pop and output as char
-                    ',' => println!("{}", convert_int_to_char(stack.pop().unwrap_or(0))?),
+                    ',' => {
+                        print!("{}", convert_int_to_char(stack.pop().unwrap_or(0))?);
+                        io::stdout().flush()?;
+                    },
                     
                     // Bridge
                     '#' => mode = Mode::Bridge,
@@ -136,7 +143,7 @@ pub fn interpret(code: &str) -> Result<(), Box<error::Error>> {
                         let x = stack.pop().unwrap_or(0);
                         
                         if (x < 0 || y < 0)
-                            || ((x as usize > playfield_dimensions.x) || (y as usize > playfield_dimensions.y)) {
+                            || ((x > playfield_dimensions.x) || (y > playfield_dimensions.y)) {
                             return Err(format!("Get at ({}, {}) is out of bounds!", x, y).into())
                         }
                         
@@ -150,7 +157,7 @@ pub fn interpret(code: &str) -> Result<(), Box<error::Error>> {
                         let popped_value = stack.pop().unwrap_or(0);
                         
                         if (x < 0 || y < 0)
-                            || ((x as usize > playfield_dimensions.x) || (y as usize > playfield_dimensions.y)) {
+                            || ((x > playfield_dimensions.x) || (y > playfield_dimensions.y)) {
                             return Err(format!("Put at ({}, {}) is out of bounds!", x, y).into())
                         }
 
@@ -180,18 +187,26 @@ pub fn interpret(code: &str) -> Result<(), Box<error::Error>> {
                 }
             }
         }
-
+    
+        // println!("position before: {}", (position.x - 1) % playfield_dimensions.x);
         position = match direction {
             Direction::Up => Coord {
                 x: position.x,
-                y: (position.y - 1) % playfield_dimensions.y,
+                // y: (position.y - 1) % playfield_dimensions.y,
+                y: match position.y {
+                    0 => playfield_dimensions.y - 1,
+                    _ => position.y - 1,
+                }
             },
             Direction::Down => Coord {
                 x: position.x,
                 y: (position.y + 1) % playfield_dimensions.y,
             },
             Direction::Left => Coord {
-                x: (position.x - 1) % playfield_dimensions.x,
+                x:  match position.x {
+                    0 => playfield_dimensions.x - 1,
+                    _ => position.x - 1,
+                },
                 y: position.y,
             },
             Direction::Right => Coord {
@@ -199,10 +214,11 @@ pub fn interpret(code: &str) -> Result<(), Box<error::Error>> {
                 y: position.y,
             },
         };
-        println!("curr_char: {}, stack: {:?}", curr_char, stack);
-        curr_char = playfield[position.y][position.x];
+        // println!("curr_char: '{}', stack: {:?}", curr_char, stack);
+        curr_char = playfield[position.y as usize][position.x as usize];
     }
 
+    println!();
     Ok(())
 }
 
