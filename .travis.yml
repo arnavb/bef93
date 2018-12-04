@@ -1,0 +1,20 @@
+language: rust
+
+cache: cargo
+
+rust:
+  # Minimally supported version used for deploys
+  - 1.30.0
+  
+  # Other testing channels
+  - stable
+  - beta
+  - nightly
+  
+matrix:
+  allow_failures:
+    - rust: nightly
+    - rust: beta
+  fast_finish: true
+
+script: cargo check
