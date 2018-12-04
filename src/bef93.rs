@@ -16,7 +16,7 @@
 
 use rand::{thread_rng, Rng};
 
-use std::error;
+use std::{io, error};
 
 #[derive(Debug)]
 pub enum Direction {
@@ -39,21 +39,17 @@ struct Coord {
     y: usize,
 }
 
-pub fn interpret(code: &str) -> Result<String, Box<error::Error>> {
+pub fn interpret(code: &str) -> Result<(), Box<error::Error>> {
     let playfield_width = match code.lines().max_by_key(|line| line.len()) {
         Some(line) => line.len(),
-        None => return Ok("".to_string()),
+        None => return Ok(()),
     };
     
+    // Create a vector of vector of chars. Each line is right-padded with spaces
+    // to the longest line width.
     let mut playfield = code.lines()
-        .map(|line| {
-            if line.len() < playfield_width {
-                (&format!("{}{}", line, " ".repeat(playfield_width - line.len())))
-                    .chars().collect::<Vec<char>>()
-            } else {
-                line.chars().collect::<Vec<char>>()
-            }
-        })
+        .map(|line| format!("{:<width$}", line, width = playfield_width)
+                .chars().collect::<Vec<char>>())
         .collect::<Vec<Vec<char>>>();
     
     let playfield_dimensions = Coord {
@@ -67,86 +63,30 @@ pub fn interpret(code: &str) -> Result<String, Box<error::Error>> {
     let mut position = Coord { x: 0, y: 0 };
     let mut curr_char = playfield[position.y][position.x];
     
-    let mut output = String::new();
-    loop {
-        println!("The current character is {}", curr_char);
-        println!("The current position is ({}, {})", position.x, position.y);
+    let mut rng = thread_rng();
     
+    loop {
         match mode {
             Mode::Bridge => mode = Mode::Command,
             Mode::String => {
-                if curr_char == '"' {
-                    mode = Mode::Command;
-                } else {
-                    stack.push(curr_char as i64);
+                match curr_char {
+                    '"' => mode = Mode::Command,
+                    _ => stack.push(curr_char as i64),
                 }
             }
             Mode::Command => {
                 match curr_char {
-                    // Digit [0-9]
-                    curr_char if curr_char.is_digit(10) => stack.push(curr_char.to_digit(10).unwrap() as i64),
+                    // Digit
+                    '0' ... '9' => stack.push(curr_char.to_digit(10).unwrap() as i64),
                     
                     // Space (no-op)
                     ' ' => (),
                     
-                    // Add
-                    '+' => {
-                        let a = stack.pop().unwrap_or(0);
-                        let b = stack.pop().unwrap_or(0);
-                        stack.push(a + b);
-                    }
+                    // Binary operations
+                    '+' | '-' | '*' | '/' | '%' | '`' | '\\' => do_binary_operation(&mut stack, curr_char)?,
                     
-                    // Subtract
-                    '-' => {
-                        let a = stack.pop().unwrap_or(0);
-                        let b = stack.pop().unwrap_or(0);
-                        stack.push(b - a);
-                    }
-                    
-                    // Multiply
-                    '*' => {
-                        let a = stack.pop().unwrap_or(0);
-                        let b = stack.pop().unwrap_or(0);
-                        stack.push(a * b);
-                    }
-                    
-                    // Divide
-                    '/' => {
-                        let a = stack.pop().unwrap_or(0);
-                        let b = stack.pop().unwrap_or(0);
-                        
-                        if a == 0 {
-                            return Err(format!("{} / 0 is not a valid operation!", b).into());
-                        }
-                        
-                        stack.push(b / a);
-                    }
-                    
-                    // Modulo
-                    '%' => {
-                        let a = stack.pop().unwrap_or(0);
-                        let b = stack.pop().unwrap_or(0);
-                        
-                        if a == 0 {
-                            return Err(format!("{} % 0 is not a valid operation!", b).into());
-                        }
-                        
-                        stack.push(b % a);
-                    }
-                    
-                    // Not
-                    '!' => {
-                        let value = stack.pop().unwrap_or(0);
-                        stack.push(!value);
-                    }
-                    
-                    // Greater
-                    '`' => {
-                        let a = stack.pop().unwrap_or(0);
-                        let b = stack.pop().unwrap_or(0);
-                        
-                        stack.push((b > a) as i64);
-                    }
+                    // Unary operations
+                    '!' | ':' | '$' => do_unary_operation(&mut stack, curr_char),
                     
                     // Playfield directions
                     '>' => direction = Direction::Right,
@@ -155,7 +95,7 @@ pub fn interpret(code: &str) -> Result<String, Box<error::Error>> {
                     'v' => direction = Direction::Down,
                     
                     // Random direction
-                    '?' => direction = match thread_rng().gen_range(0, 4) {
+                    '?' => direction = match rng.gen_range(0, 4) {
                         0 => Direction::Up,
                         1 => Direction::Down,
                         2 => Direction::Left,
@@ -164,8 +104,7 @@ pub fn interpret(code: &str) -> Result<String, Box<error::Error>> {
                     
                     // Horizontal if
                     '_' => {
-                        let value = stack.pop().unwrap_or(0);
-                        direction = match value {
+                        direction = match stack.pop().unwrap_or(0) {
                             0 => Direction::Right,
                             _ => Direction::Left,
                         };
@@ -173,8 +112,7 @@ pub fn interpret(code: &str) -> Result<String, Box<error::Error>> {
                     
                     // Vertical if
                     '|' => {
-                        let value = stack.pop().unwrap_or(0);
-                        direction = match value {
+                        direction = match stack.pop().unwrap_or(0) {
                             0 => Direction::Down,
                             _ => Direction::Up,
                         };
@@ -183,31 +121,11 @@ pub fn interpret(code: &str) -> Result<String, Box<error::Error>> {
                     // Stringmode
                     '"' => mode = Mode::String,
                     
-                    // Dup
-                    ':' => {
-                        let value = stack.last().cloned().unwrap_or(0);
-                        stack.push(value);
-                    }
-                    
-                    // Swap
-                    '\\' => {
-                        let a = stack.pop().unwrap_or(0);
-                        let b = stack.pop().unwrap_or(0);
-                        
-                        stack.push(a);
-                        stack.push(b);
-                    }
-                    
-                    // Pop
-                    '$' => {
-                        stack.pop();
-                    }
-                    
                     // Pop and output as integer with space
-                    '.' => output += &format!("{} ", stack.pop().unwrap_or(0).to_string()),
+                    '.' => println!("{} ", stack.pop().unwrap_or(0)),
                     
                     // Pop and output as char
-                    ',' => output.push(convert_int_to_char(stack.pop().unwrap_or(0))?),
+                    ',' => println!("{}", convert_int_to_char(stack.pop().unwrap_or(0))?),
                     
                     // Bridge
                     '#' => mode = Mode::Bridge,
@@ -217,20 +135,12 @@ pub fn interpret(code: &str) -> Result<String, Box<error::Error>> {
                         let y = stack.pop().unwrap_or(0);
                         let x = stack.pop().unwrap_or(0);
                         
-                        if y < 0 || x < 0 {
+                        if (x < 0 || y < 0)
+                            || ((x as usize > playfield_dimensions.x) || (y as usize > playfield_dimensions.y)) {
                             return Err(format!("Get at ({}, {}) is out of bounds!", x, y).into())
                         }
                         
-                        let value = match playfield.get(y as usize) {
-                            Some(line) => {
-                                match line.get(x as usize) {
-                                    Some(value) => value,
-                                    None => return Err(format!("Get at ({}, {}) is out of bounds!", x, y).into()),
-                                }
-                            }
-                            None => return Err(format!("Get at ({}, {}) is out of bounds!", x, y).into()),
-                        };
-                        stack.push(*value as i64);
+                        stack.push(playfield[y as usize][x as usize] as i64);
                     }
                     
                     // Put
@@ -239,36 +149,38 @@ pub fn interpret(code: &str) -> Result<String, Box<error::Error>> {
                         let x = stack.pop().unwrap_or(0);
                         let popped_value = stack.pop().unwrap_or(0);
                         
-                        if y < 0 || x < 0 {
+                        if (x < 0 || y < 0)
+                            || ((x as usize > playfield_dimensions.x) || (y as usize > playfield_dimensions.y)) {
                             return Err(format!("Put at ({}, {}) is out of bounds!", x, y).into())
                         }
-                        
-                        match playfield.get_mut(y as usize) {
-                            Some(line) => {
-                                match line.get_mut(x as usize) {
-                                    Some(value) => *value = convert_int_to_char(popped_value)?,
-                                    None => return Err(format!("Put at ({}, {}) is out of bounds!", x, y).into()),
-                                }
-                            }
-                            None => return Err(format!("Put at ({}, {}) is out of bounds!", x, y).into()),
-                        }
+
+                        playfield[y as usize][x as usize] = convert_int_to_char(popped_value)?;
                     }
                     
                     // Input value
-                    '&' => (),
+                    '&' => {
+                        let mut input = String::new();
+                        io::stdin().read_line(&mut input)?;
+                        
+                        stack.push(input.trim().parse::<i64>()?);
+                    }
                     
                     // Input character
-                    '~' => (),
+                    '~' => {
+                        let mut input = String::new();
+                        io::stdin().read_line(&mut input)?;
+                        
+                        stack.push(input.trim().parse::<char>()? as i64);
+                    },
                     
                     // End
                     '@' => break,
                     
-                    _ => return Err(format!("An unexpected character {} was found!", curr_char).into()),
+                    _ => return Err(format!("An unexpected character '{}' was found!", curr_char).into()),
                 }
             }
         }
 
-        println!("The stack contains: {:?}", stack);
         position = match direction {
             Direction::Up => Coord {
                 x: position.x,
@@ -287,22 +199,77 @@ pub fn interpret(code: &str) -> Result<String, Box<error::Error>> {
                 y: position.y,
             },
         };
-        
+        println!("curr_char: {}, stack: {:?}", curr_char, stack);
         curr_char = playfield[position.y][position.x];
     }
 
-    Ok(output)
+    Ok(())
 }
+
+fn do_unary_operation(stack: &mut Vec<i64>, operation: char) {
+    let a = stack.pop().unwrap_or(0);
+    
+    match operation {
+        // Not
+        '!' => stack.push((a == 0) as i64),
+        
+        // Dup
+        ':' => {
+            stack.push(a);
+            stack.push(a);
+        }
+        
+        // Pop ($)
+        _ => (),
+    }
+}
+
+fn do_binary_operation(stack: &mut Vec<i64>, operation: char) -> Result<(), Box<error::Error>> {
+    let (a, b) = (stack.pop().unwrap_or(0), stack.pop().unwrap_or(0));
+    
+    match operation {
+        // Add
+        '+' => stack.push(b + a),
+        
+        // Subtract
+        '-' => stack.push(b - a),
+        
+        // Multiply
+        '*' => stack.push(b * a),
+        
+        // Divide
+        '/' => {
+            if a < 0 {
+                return Err(format!("{} / 0 is not a valid operation!", b).into());
+            }
+            stack.push(b / a);
+        }
+        
+        // Modulo
+        '%' => {
+            if a < 0 {
+                return Err(format!("{} / 0 is not a valid operation!", b).into());
+            }
+            stack.push(b % a);
+        }
+        
+        // Greater
+        '`' => stack.push((b > a) as i64),
+        
+        // Swap (\)
+        _ => {
+            stack.push(a);
+            stack.push(b);
+        }
+    }
+    Ok(())
+} 
 
 fn convert_int_to_char(value: i64) -> Result<char, Box<error::Error>> {
     if value < 0 || value > 127 {
         return Err("ASCII values must be between 0 and 127!".into());
     }
     
-    // let value = value as u32;
-    
-    match std::char::from_u32(value as u32) {
-        Some(value) => Ok(value),
-        None => Err(format!("Unable to convert ASCII value {} to a char", value).into())
-    }
+    std::char::from_u32(value as u32)
+        .ok_or(format!("Unable to convert ASCII value {} to a char", value).into())
 }
