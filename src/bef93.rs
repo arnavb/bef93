@@ -40,7 +40,7 @@ struct Coord {
     y: i64,
 }
 
-pub fn interpret(code: &str) -> Result<(), Box<error::Error>> {
+pub fn interpret(code: &str, output_handle: &mut impl Write) -> Result<(), Box<error::Error>> {
     let playfield_width = match code.lines().max_by_key(|line| line.len()) {
         Some(line) => line.len(),
         None => return Ok(()),
@@ -50,8 +50,8 @@ pub fn interpret(code: &str) -> Result<(), Box<error::Error>> {
     // to the longest line width.
     let mut playfield = code.lines()
         .map(|line| format!("{:<width$}", line, width = playfield_width)
-                .chars().collect::<Vec<char>>())
-        .collect::<Vec<Vec<char>>>();
+                .chars().collect::<Vec<_>>())
+        .collect::<Vec<Vec<_>>>();
     
     let playfield_dimensions = Coord {
         x: playfield_width as i64,
@@ -124,14 +124,14 @@ pub fn interpret(code: &str) -> Result<(), Box<error::Error>> {
                     
                     // Pop and output as integer with space
                     '.' => {
-                        print!("{} ", stack.pop().unwrap_or(0));
-                        io::stdout().flush()?;
+                        write!(output_handle, "{}", stack.pop().unwrap_or(0));
+                        output_handle.flush()?;
                     },
                     
                     // Pop and output as char
                     ',' => {
-                        print!("{}", convert_int_to_char(stack.pop().unwrap_or(0))?);
-                        io::stdout().flush()?;
+                        write!(output_handle, "{}", convert_int_to_char(stack.pop().unwrap_or(0))?);
+                        output_handle.flush()?;
                     },
                     
                     // Bridge

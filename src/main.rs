@@ -61,7 +61,7 @@ fn cli() -> Result<(), Box<error::Error>> {
     
     let file_contents = read_to_string(resolved_filepath)?;
     
-    bef93::interpret(&file_contents)?;
+    bef93::interpret(&file_contents, &mut io::stdout())?;
     
     Ok(())
 }
