@@ -2,19 +2,82 @@ language: rust
 
 cache: cargo
 
-rust:
-  # Minimally supported version used for deploys
-  - 1.30.0
-  
-  # Other testing channels
-  - stable
-  - beta
-  - nightly
-  
+env:
+  global:
+    - CRATE_NAME=test-rust-deploy-releases
+
 matrix:
+  include:
+    - os: linux
+      rust: stable
+      env: TARGET=x86_64-unknown-linux-gnu
+    
+    - os: linux
+      rust: stable
+      before_script:
+        - sudo apt-get update
+        - sudo apt-get install -y gcc-4.8 cpp-4.8 gcc-multilib
+      env: TARGET=i686-unknown-linux-gnu
+    
+    - os: osx
+      rust: stable
+      env: TARGET=x86_64-apple-darwin
+    
+    - os: windows
+      rust: stable
+      env: TARGET=x86_64-pc-windows-msvc
+    
+    - os: windows
+      rust: stable
+      env: TARGET=i686-pc-windows-msvc
+      
+    - os: linux
+      rust: 1.30.0
+      script: cargo test --release
+    
+    - os: linux
+      rust: beta
+      script: cargo test --release
+    
+    - os: linux
+      rust: nightly
+      script: cargo test --release
+
   allow_failures:
     - rust: nightly
     - rust: beta
   fast_finish: true
 
-script: cargo check
+script:
+  - rustup target install $TARGET
+  - cargo test --release --target=$TARGET
+  - cargo build --release --target=$TARGET
+  
+before_deploy:
+  - mkdir $CRATE_NAME-$TRAVIS_TAG-$TARGET
+  - |
+    if [[ $TRAVIS_OS_NAME == "windows" ]]; then
+      cp target/$TARGET/release/$CRATE_NAME.exe $CRATE_NAME-$TRAVIS_TAG-$TARGET
+    else
+      cp target/$TARGET/release/$CRATE_NAME $CRATE_NAME-$TRAVIS_TAG-$TARGET
+    fi
+  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then tar czf $CRATE_NAME-$TRAVIS_TAG-$TARGET.tar.gz $CRATE_NAME-$TRAVIS_TAG-$TARGET; fi
+  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then zip -r $CRATE_NAME-$TRAVIS_TAG-$TARGET.zip $CRATE_NAME-$TRAVIS_TAG-$TARGET; fi
+  - if [[ $TRAVIS_OS_NAME == "windows" ]]; then 7z a -tzip $CRATE_NAME-$TRAVIS_TAG-$TARGET.zip $CRATE_NAME-$TRAVIS_TAG-$TARGET; fi
+    
+deploy:
+  provider: releases
+  api_key:
+    secure: "oLbHYn1tmiG05m9ayx7fbDDmdZLh9P8/ZtNjrQJIeDXfI73fn5Ot29HTuZ0qiBvaCZzpgSw8GyA5IJtye49Ho90cYm81foZzC91Dkxt+ajyXffXW4OSMeiCOHlFp4OVEXDLMPlsUOWRlqgv6DzXSzufFXWrh/Ih1Yf8Jff6mewVjZtfRfgvX0hf+J3P2WNpdtFutdm2AnY1jInOK9AarpfTRZYX5SFSYec16Rkimyz8Ns9dlfjtlNk7nzhjrjl0MtNVbL6vCG0O4jI4ZKP/KW4gt2F7BDh7nkrgDs0NxVpzCDL8M8Ikw6VZ+8MWku3Ugvq4E34WVj9QojlSe6tbRoIcaUi1MoVz1cjymiJ7t9y+kjEZyiJfRk3q7Vny6SlZd7f/Gs5flXrQwc9bzFXJru7/RYn0XqSxuz9C21UzYw1rCzhjHfPIOnsNyDNM+5pfuy8ny3kJInsQVEtOVwNanzcdPDCXf5A3tkZohkFwFaFKQf3MSP10UHjpoMHtMEetrZHrxvta/VqAg2y19uEk0Brg7l/WLXb4XAM1uTn7s4Uug3jiTsM0haPUYpS/W3DaFDZ7IchFQVIVRtckWX02q8hQlxBq5f/K/bWiDGeKhcyWkVXPB9VoDF///mMbi1N1UBo0DL446hYGBDxpjYC4ASOq6olmakLAFYFk91iCItIY="
+  skip_cleanup: true
+  file_glob: true
+  file: $CRATE_NAME-$TRAVIS_TAG-$TARGET.*
+  on:
+    tags: true
+    condition: $TRAVIS_RUST_VERSION = stable
+
+branches:
+  only:
+    - master
+    # Tags
+    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
