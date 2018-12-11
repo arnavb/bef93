@@ -51,9 +51,9 @@ matrix:
 script:
   - rustup target install $TARGET
   - cargo test --release --target=$TARGET
-  - cargo build --release --target=$TARGET
   
 before_deploy:
+  - cargo build --release --target=$TARGET
   - mkdir $CRATE_NAME-$TRAVIS_TAG-$TARGET
   - |
     if [[ $TRAVIS_OS_NAME == "windows" ]]; then
