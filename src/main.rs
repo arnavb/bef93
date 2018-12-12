@@ -20,15 +20,19 @@ extern crate rand;
 mod bef93;
 
 use std::{error, io, process};
+use std::io::Write;
 use std::env::current_dir;
 use std::fs::read_to_string;
 use std::path::PathBuf;
 
 fn main() {
     process::exit(if let Err(err) = cli() {
-        // The string is trimmed because clap errors have an extra newline
-        // at the end.
-        eprintln!("{}", format!("{}", err).trim_right());
+        if let Some(clap_err) = err.downcast_ref::<clap::Error>() {
+            eprint!("{}", clap_err);
+            io::stdout().flush().unwrap_or_else(|_| eprintln!("Unable to flush stdout!"));
+        } else if let Some(io_err) = err.downcast_ref::<io::Error>() {
+            eprintln!("IO Error: {}", io_err);
+        }
         1
     } else {
         0
