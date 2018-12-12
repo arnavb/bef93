@@ -30,7 +30,13 @@ matrix:
     - os: windows
       rust: stable
       env: TARGET=i686-pc-windows-msvc
-      
+    
+    - os: linux
+      rust: stable
+      script:
+        - rustup component add clippy
+        - cargo clippy -- -D warnings
+    
     - os: linux
       rust: 1.30.0
       script: cargo test --release
