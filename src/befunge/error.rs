@@ -1,4 +1,4 @@
-/* bef93/error.rs - Contains the struct definition for Befunge-93 errors
+/* befunge/error.rs - Contains the struct definition for Befunge-93 errors
  * Copyright 2018 Arnav Borborah
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
