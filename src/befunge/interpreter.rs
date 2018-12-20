@@ -18,7 +18,6 @@ use rand::{thread_rng, Rng};
 
 use std::io;
 use std::error::Error as StdError;
-use std::collections::HashMap;
 use std::io::Write;
 
 use super::error::Error as BefungeError;
@@ -51,8 +50,6 @@ struct Playfield {
     
     program_counter_position: Coord,
     program_counter_direction: Direction,
-    
-    curr_char: char,
 }
 
 impl Playfield {
@@ -78,13 +75,11 @@ impl Playfield {
             },
             program_counter_position,
             program_counter_direction,
-            curr_char: '@',
         }
     }
     
     fn get_next_character(&self) -> char {
-        // program_counter.
-        self.code_map[self.program_counter_position.x as usize][self.program_counter_position.y as usize]
+        self.code_map[self.program_counter_position.y as usize][self.program_counter_position.x as usize]
     }
     
     fn set_character_at(&mut self, position: Coord, value: char) -> Result<(), BefungeError> {
@@ -92,7 +87,7 @@ impl Playfield {
             || position.x > self.dimensions.x || position.y > self.dimensions.y {
             Err(BefungeError(format!("Location ({}, {}) is out of bounds!", position.x, position.y)))
         } else {
-            self.code_map[position.x as usize][position.y as usize] = value;
+            self.code_map[position.y as usize][position.x as usize] = value;
             Ok(())
         }
     }
@@ -102,7 +97,7 @@ impl Playfield {
             || position.x > self.dimensions.x || position.y > self.dimensions.y {
             Err(BefungeError(format!("Location ({}, {}) is out of bounds!", position.x, position.y)))
         } else {
-            Ok(self.code_map[position.x as usize][position.y as usize])
+            Ok(self.code_map[position.y as usize][position.x as usize])
         }
     }
     
@@ -162,7 +157,7 @@ impl<Writable: Write> Interpreter<Writable> {
     pub fn execute(&mut self) -> Result<(), Box<StdError>> {
         loop {
             let curr_char = self.playfield.get_next_character();
-            
+
             match self.mode {
                 Mode::Bridge => self.mode = Mode::Command,
                 
@@ -177,7 +172,7 @@ impl<Writable: Write> Interpreter<Writable> {
                     match curr_char {
                         '0' ..= '9' => self.stack.push(curr_char.to_digit(10).unwrap() as i64),
                         
-                        '!' | '_' | '|' | ':' | '.' | ',' => self.run_unary_operation(curr_char)?,
+                        '!' | '_' | '|' | ':' | '$' | '.' | ',' => self.run_unary_operation(curr_char)?,
                         
                         '+' | '-' | '*' | '/' | '%' | '`' | '\\' | 'g' => self.run_binary_operation(curr_char)?,
                         
@@ -217,6 +212,7 @@ impl<Writable: Write> Interpreter<Writable> {
                 self.stack.push(value);
                 self.stack.push(value);
             }
+            '$' => (),
             '.' => {
                 write!(self.output_handle, "{} ", value);
                 self.output_handle.flush()?;

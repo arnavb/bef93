@@ -70,21 +70,12 @@ fn cli() -> Result<(), Box<error::Error>> {
     
     let file_contents = read_to_string(resolved_filepath)?;
     
-    // let program_counter = befunge::ProgramCounter {
-    //     direction: befunge::Direction::Right,
-    //     position: befunge::Coord { 
-    //         x: 0,
-    //         y: 0,
-    //     }
-    // };
-    
     let mut output_handle = io::stdout();
     
     let mut interpreter = befunge::Interpreter::new(&file_contents,
         None, None, &mut output_handle);
     
-    interpreter.execute();
-    // befunge::interpret(&file_contents, &mut io::stdout())?;
+    interpreter.execute()?;
     
     Ok(())
 }
