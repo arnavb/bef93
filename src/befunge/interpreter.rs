@@ -20,6 +20,7 @@ use std::io;
 use std::error::Error as StdError;
 use std::io::Write;
 
+// Throughout comments, befunge::Error will be referred to as BefungeError
 use super::error::Error as BefungeError;
 
 #[derive(Debug)]
@@ -31,18 +32,12 @@ pub enum Direction {
 }
 
 #[derive(Debug)]
-enum Mode {
-    String,
-    Command,
-    Bridge,
-}
-
-#[derive(Debug)]
 pub struct Coord {
     pub x: i64,
     pub y: i64,
 }
 
+// Represents the Befunge-93 playfield
 #[derive(Debug)]
 struct Playfield {
     code_map: Vec<Vec<char>>,
@@ -53,6 +48,8 @@ struct Playfield {
 }
 
 impl Playfield {
+    // Initializes the playfield with the program code code,
+    // an initial program counter position, and direction
     fn new(code: &str, program_counter_position: Coord, program_counter_direction: Direction) -> Playfield {
         // Get the longest line width as the width of the playfield
         let width = code.lines().max_by_key(|line| line.len()).unwrap_or("").len();
@@ -64,7 +61,6 @@ impl Playfield {
                     .chars().collect::<Vec<_>>())
             .collect::<Vec<Vec<_>>>();
         
-        // Get the height of the playfield
         let height = code_map.len();
     
         Playfield {
@@ -78,10 +74,14 @@ impl Playfield {
         }
     }
     
+    // Returns the character at the current program counter position
     fn get_next_character(&self) -> char {
         self.code_map[self.program_counter_position.y as usize][self.program_counter_position.x as usize]
     }
     
+    // Modifies the playfield at a specific position. This is needed for put (p)
+    // calls.
+    // If the passed position is out of bounds, a BefungeError will be returned.
     fn set_character_at(&mut self, position: Coord, value: char) -> Result<(), BefungeError> {
         if position.x < 0 || position.y < 0
             || position.x > self.dimensions.x || position.y > self.dimensions.y {
@@ -92,6 +92,9 @@ impl Playfield {
         }
     }
     
+    // Gets the character on the playfield at a specific position.
+    // This is needed for get (g) calls.
+    // If the passed position is out of bounds, a BefungeError will be returned.
     fn get_character_at(&self, position: Coord) -> Result<char, BefungeError> {
         if position.x < 0 || position.y < 0
             || position.x > self.dimensions.x || position.y > self.dimensions.y {
@@ -101,6 +104,9 @@ impl Playfield {
         }
     }
     
+    // Updates the position of the program counter based on it's direction
+    // and position. This method handles position wraparound (assuming
+    // the width/height of the playfield is less than std::i64::MAX).
     fn update_program_counter(&mut self) {
         self.program_counter_position = match self.program_counter_direction {
             Direction::Up => Coord {
@@ -129,20 +135,33 @@ impl Playfield {
     }
 }
 
+// Possible interpreter modes
+#[derive(Debug)]
+enum Mode {
+    String,
+    Command,
+    Bridge,
+}
+
+// This struct handles the execution of the Befunge-93 code. An instance of this
+// struct is initialized from the client CLI code.
 #[derive(Debug)]
 pub struct Interpreter<Writable: Write>
 {
     playfield: Playfield,
     stack: Vec<i64>,
-    output_handle: Writable,
+    output_handle: Writable, // Allow arbitrary output redirection to a struct
+                             // implementing Write
     mode: Mode,
 }
 
 impl<Writable: Write> Interpreter<Writable> {
+    // Intializes the interpreter with the program code, an output handle,
+    // and optionally an initial program counter position and direction
     pub fn new(code: &str,
+        output_handle: Writable,
         program_counter_position: Option<Coord>,
-        program_counter_direction: Option<Direction>,
-        output_handle: Writable) -> Interpreter<Writable>
+        program_counter_direction: Option<Direction>) -> Interpreter<Writable>
     {
         Interpreter {
             playfield: Playfield::new(code,
@@ -154,6 +173,15 @@ impl<Writable: Write> Interpreter<Writable> {
         }
     }
     
+    /* Executes the Befunge-93 code. May return the following errors:
+    
+    1. Any errors propagated from `self.run_unary_operation`, `self.run_binary_operation`,
+       or `self.run_other_operation`.
+    
+    2. If an unexpected command is met while parsing in command mode, a BefungeError
+       will be returned.
+
+    */
     pub fn execute(&mut self) -> Result<(), Box<StdError>> {
         loop {
             let curr_char = self.playfield.get_next_character();
@@ -191,6 +219,18 @@ impl<Writable: Write> Interpreter<Writable> {
         Ok(())
     }
     
+    
+    /* Executes unary operations. May return the following errors:
+    
+    1. If a conversion from a integer to a character is not possible, a BefungeError
+       will be returned.
+       
+    2. TODO: Writing to output handle
+    
+    3. If the output handle cannot be flushed, the respective io::Error will be
+       returned.
+    
+    */
     fn run_unary_operation(&mut self, operation: char) -> Result<(), Box<StdError>> {
         let value = self.stack.pop().unwrap_or(0);
         
@@ -225,6 +265,18 @@ impl<Writable: Write> Interpreter<Writable> {
         Ok(())
     }
     
+    
+    /* Executes binary operations. May return the following errors:
+    
+    1. If an attempt is made to divide by 0 (usually as a result of an empty stack),
+       a BefungeError will be returned.
+       
+    2. If an attempt is made to mod by 0 (usually as a result of an empty stack),
+       a BefungeError will be returned. 
+    
+    3. Any errors propagated up from `self.playfield.get_character_at`.
+    
+    */
     fn run_binary_operation(&mut self, operation: char) -> Result<(), Box<StdError>> {
         let (a, b) = (self.stack.pop().unwrap_or(0), self.stack.pop().unwrap_or(0));
         
@@ -256,6 +308,20 @@ impl<Writable: Write> Interpreter<Writable> {
         Ok(())
     }
     
+    /* Executes other operations (except digits and @). May return the following errors:
+    
+    1. Any errors propagated up from `self.playfield.set_character_at`.
+    
+    2. If a conversion from a integer to a character is not possible, a BefungeError
+       will be returned.
+       
+    3. For the & command, if a non-integer value is entered, a BefungeError will
+       be returned.
+     
+    4. For the ~ command, if a non-char value is entered, a BefungeError will
+       be returned.
+    
+    */
     fn run_other_operation(&mut self, operation: char) -> Result<(), Box<StdError>> {
         match operation {
             ' ' => (),
@@ -301,6 +367,8 @@ impl<Writable: Write> Interpreter<Writable> {
     }
 }
 
+// TODO: Convert errors to BefungeErrors and possibly handle a greater range
+// of ASCII values
 fn convert_int_to_char(value: i64) -> Result<char, Box<StdError>> {
     if value < 0 || value > 127 {
         return Err("ASCII values must be between 0 and 127!".into());

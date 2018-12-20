@@ -27,6 +27,7 @@ use std::path::PathBuf;
 
 fn main() {
     process::exit(if let Err(err) = cli() {
+        // Error handling code
         if let Some(clap_err) = err.downcast_ref::<clap::Error>() {
             eprint!("{}", clap_err);
             io::stdout().flush().unwrap_or_else(|_| eprintln!("Unable to flush stdout!"));
@@ -70,8 +71,10 @@ fn cli() -> Result<(), Box<error::Error>> {
     
     let file_contents = read_to_string(resolved_filepath)?;
     
+    // TODO: Add support for redirected output to a file
     let mut output_handle = io::stdout();
     
+    // TODO: Add support for user supplied initial direction and position
     let mut interpreter = befunge::Interpreter::new(&file_contents,
         None, None, &mut output_handle);
     
@@ -80,6 +83,8 @@ fn cli() -> Result<(), Box<error::Error>> {
     Ok(())
 }
 
+// Resolves a passed filepath to either a relative or absolute location.
+// If the file does not exist or refer to a file, a io::Error error will be returned.
 fn resolve_filepath(path: &str) -> Result<PathBuf, Box<error::Error>> {
     let mut result = PathBuf::from(path);
     
