@@ -1,4 +1,4 @@
-/* main.rs - Contains the main function and CLI code for bef93.
+/* main.rs - Contains the main function and CLI code for bef93
  * Copyright 2018 Arnav Borborah
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,7 @@
 #[macro_use] extern crate clap;
 extern crate rand;
 
-mod bef93;
+mod befunge;
 
 use std::{error, io, process};
 use std::io::Write;
@@ -30,8 +30,13 @@ fn main() {
         if let Some(clap_err) = err.downcast_ref::<clap::Error>() {
             eprint!("{}", clap_err);
             io::stdout().flush().unwrap_or_else(|_| eprintln!("Unable to flush stdout!"));
+            
+        } else if let Some(befunge_err) = err.downcast_ref::<befunge::Error>() {
+            eprintln!("Befunge-93 Error: {}", befunge_err);
+            
         } else if let Some(io_err) = err.downcast_ref::<io::Error>() {
             eprintln!("IO Error: {}", io_err);
+            
         }
         1
     } else {
@@ -65,7 +70,21 @@ fn cli() -> Result<(), Box<error::Error>> {
     
     let file_contents = read_to_string(resolved_filepath)?;
     
-    bef93::interpret(&file_contents, &mut io::stdout())?;
+    // let program_counter = befunge::ProgramCounter {
+    //     direction: befunge::Direction::Right,
+    //     position: befunge::Coord { 
+    //         x: 0,
+    //         y: 0,
+    //     }
+    // };
+    
+    let mut output_handle = io::stdout();
+    
+    let mut interpreter = befunge::Interpreter::new(&file_contents,
+        None, None, &mut output_handle);
+    
+    interpreter.execute();
+    // befunge::interpret(&file_contents, &mut io::stdout())?;
     
     Ok(())
 }
