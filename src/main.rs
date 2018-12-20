@@ -76,7 +76,7 @@ fn cli() -> Result<(), Box<error::Error>> {
     
     // TODO: Add support for user supplied initial direction and position
     let mut interpreter = befunge::Interpreter::new(&file_contents,
-        None, None, &mut output_handle);
+        &mut output_handle, None, None);
     
     interpreter.execute()?;
     
