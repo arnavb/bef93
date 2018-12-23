@@ -35,7 +35,7 @@ matrix:
       rust: stable
       script:
         - rustup component add clippy
-        - cargo clippy -- -D warnings
+        - cargo clippy
     
     - os: linux
       rust: 1.30.0
