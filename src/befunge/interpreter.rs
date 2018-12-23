@@ -89,6 +89,7 @@ impl<Writable: Write> Interpreter<Writable> {
             if self.playfield.dimensions.x == 0 {
                 continue;
             }
+            
             let curr_char = self.playfield.get_next_character();
 
             match self.mode {
