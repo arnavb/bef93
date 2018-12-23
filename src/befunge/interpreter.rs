@@ -64,29 +64,31 @@ impl<Writable: Write> Interpreter<Writable> {
     pub fn new(code: &str,
         output_handle: Writable,
         program_counter_position: Option<Coord>,
-        program_counter_direction: Option<Direction>) -> Interpreter<Writable>
+        program_counter_direction: Option<Direction>) -> Result<Interpreter<Writable>, BefungeError>
     {
-        Interpreter {
+        Ok(Interpreter {
             playfield: Playfield::new(code,
                 program_counter_position.unwrap_or(Coord { x: 0, y: 0 }),
-                program_counter_direction.unwrap_or(Direction::Right)),
+                program_counter_direction.unwrap_or(Direction::Right))?,
             stack: Vec::new(),
             output_handle,
             mode: Mode::Command,
-        }
+        })
     }
     
-    /* Executes the Befunge-93 code. May return the following errors:
-    
-    1. Any errors propagated from `self.run_unary_operation`, `self.run_binary_operation`,
-       or `self.run_other_operation`.
-    
-    2. If an unexpected command is met while parsing in command mode, a BefungeError
-       will be returned.
-
-    */
+    // Executes the Befunge-93 code. May return the following errors:
+    //
+    // 1. Any errors propagated from `self.run_unary_operation`, `self.run_binary_operation`,
+    //   or `self.run_other_operation`.
+    //
+    // 2. If an unexpected command is met while parsing in command mode, a BefungeError
+    //   will be returned.
     pub fn execute(&mut self) -> Result<(), Box<StdError>> {
         loop {
+            // Empty program is an infinite loop
+            if self.playfield.dimensions.x == 0 {
+                continue;
+            }
             let curr_char = self.playfield.get_next_character();
 
             match self.mode {
@@ -123,17 +125,15 @@ impl<Writable: Write> Interpreter<Writable> {
     }
     
     
-    /* Executes unary operations. May return the following errors:
-    
-    1. If a conversion from a integer to a character is not possible, a BefungeError
-       will be returned.
-       
-    2. TODO: Writing to output handle
-    
-    3. If the output handle cannot be flushed, the respective io::Error will be
-       returned.
-    
-    */
+    // Executes unary operations. May return the following errors:
+    //
+    // 1. If a conversion from a integer to a character is not possible, a BefungeError
+    //   will be returned.
+    //   
+    // 2. TODO: Writing to output handle
+    //
+    // 3. If the output handle cannot be flushed, the respective io::Error will be
+    //   returned.
     fn run_unary_operation(&mut self, operation: char) -> Result<(), Box<StdError>> {
         let value = self.stack.pop().unwrap_or(0);
         
@@ -169,17 +169,15 @@ impl<Writable: Write> Interpreter<Writable> {
     }
     
     
-    /* Executes binary operations. May return the following errors:
-    
-    1. If an attempt is made to divide by 0 (usually as a result of an empty stack),
-       a BefungeError will be returned.
-       
-    2. If an attempt is made to mod by 0 (usually as a result of an empty stack),
-       a BefungeError will be returned. 
-    
-    3. Any errors propagated up from `self.playfield.get_character_at`.
-    
-    */
+    // Executes binary operations. May return the following errors:
+    //
+    // 1. If an attempt is made to divide by 0 (usually as a result of an empty stack),
+    //   a BefungeError will be returned.
+    //   
+    // 2. If an attempt is made to mod by 0 (usually as a result of an empty stack),
+    //   a BefungeError will be returned. 
+    //
+    // 3. Any errors propagated up from `self.playfield.get_character_at`.
     fn run_binary_operation(&mut self, operation: char) -> Result<(), Box<StdError>> {
         let (a, b) = (self.stack.pop().unwrap_or(0), self.stack.pop().unwrap_or(0));
         
@@ -211,20 +209,18 @@ impl<Writable: Write> Interpreter<Writable> {
         Ok(())
     }
     
-    /* Executes other operations (except digits and @). May return the following errors:
-    
-    1. Any errors propagated up from `self.playfield.set_character_at`.
-    
-    2. If a conversion from a integer to a character is not possible, a BefungeError
-       will be returned.
-       
-    3. For the & command, if a non-integer value is entered, a BefungeError will
-       be returned.
-     
-    4. For the ~ command, if a non-char value is entered, a BefungeError will
-       be returned.
-    
-    */
+    // Executes other operations (except digits and @). May return the following errors:
+    //
+    // 1. Any errors propagated up from `self.playfield.set_character_at`.
+    //
+    // 2. If a conversion from a integer to a character is not possible, a BefungeError
+    //   will be returned.
+    //   
+    // 3. For the & command, if a non-integer value is entered, a BefungeError will
+    //   be returned.
+    // 
+    // 4. For the ~ command, if a non-char value is entered, a BefungeError will
+    //   be returned.
     fn run_other_operation(&mut self, operation: char) -> Result<(), Box<StdError>> {
         match operation {
             ' ' => (),
