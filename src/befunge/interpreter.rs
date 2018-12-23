@@ -22,8 +22,9 @@ use std::io::Write;
 
 // Throughout comments, befunge::Error will be referred to as BefungeError
 use super::error::Error as BefungeError;
+use super::playfield::Playfield;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Direction {
     Up,
     Down,
@@ -31,108 +32,10 @@ pub enum Direction {
     Right,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Coord {
     pub x: i64,
     pub y: i64,
-}
-
-// Represents the Befunge-93 playfield
-#[derive(Debug)]
-struct Playfield {
-    code_map: Vec<Vec<char>>,
-    dimensions: Coord,
-    
-    program_counter_position: Coord,
-    program_counter_direction: Direction,
-}
-
-impl Playfield {
-    // Initializes the playfield with the program code code,
-    // an initial program counter position, and direction
-    fn new(code: &str, program_counter_position: Coord, program_counter_direction: Direction) -> Playfield {
-        // Get the longest line width as the width of the playfield
-        let width = code.lines().max_by_key(|line| line.len()).unwrap_or("").len();
-    
-        // Create a vector of vector of chars. Each line is right-padded with spaces
-        // to the longest line width.
-        let code_map = code.lines()
-            .map(|line| format!("{:<width$}", line, width = width)
-                    .chars().collect::<Vec<_>>())
-            .collect::<Vec<Vec<_>>>();
-        
-        let height = code_map.len();
-    
-        Playfield {
-            code_map,
-            dimensions: Coord {
-                x: width as i64,
-                y: height as i64,
-            },
-            program_counter_position,
-            program_counter_direction,
-        }
-    }
-    
-    // Returns the character at the current program counter position
-    fn get_next_character(&self) -> char {
-        self.code_map[self.program_counter_position.y as usize][self.program_counter_position.x as usize]
-    }
-    
-    // Modifies the playfield at a specific position. This is needed for put (p)
-    // calls.
-    // If the passed position is out of bounds, a BefungeError will be returned.
-    fn set_character_at(&mut self, position: Coord, value: char) -> Result<(), BefungeError> {
-        if position.x < 0 || position.y < 0
-            || position.x > self.dimensions.x || position.y > self.dimensions.y {
-            Err(BefungeError(format!("Location ({}, {}) is out of bounds!", position.x, position.y)))
-        } else {
-            self.code_map[position.y as usize][position.x as usize] = value;
-            Ok(())
-        }
-    }
-    
-    // Gets the character on the playfield at a specific position.
-    // This is needed for get (g) calls.
-    // If the passed position is out of bounds, a BefungeError will be returned.
-    fn get_character_at(&self, position: Coord) -> Result<char, BefungeError> {
-        if position.x < 0 || position.y < 0
-            || position.x > self.dimensions.x || position.y > self.dimensions.y {
-            Err(BefungeError(format!("Location ({}, {}) is out of bounds!", position.x, position.y)))
-        } else {
-            Ok(self.code_map[position.y as usize][position.x as usize])
-        }
-    }
-    
-    // Updates the position of the program counter based on it's direction
-    // and position. This method handles position wraparound (assuming
-    // the width/height of the playfield is less than std::i64::MAX).
-    fn update_program_counter(&mut self) {
-        self.program_counter_position = match self.program_counter_direction {
-            Direction::Up => Coord {
-                x: self.program_counter_position.x,
-                y: match self.program_counter_position.y {
-                    0 => self.dimensions.y - 1,
-                    _ => self.program_counter_position.y - 1,
-                }
-            },
-            Direction::Down => Coord {
-                x: self.program_counter_position.x,
-                y: (self.program_counter_position.y + 1) % self.dimensions.y,
-            },
-            Direction::Left => Coord {
-                x:  match self.program_counter_position.x {
-                    0 => self.dimensions.x - 1,
-                    _ => self.program_counter_position.x - 1,
-                },
-                y: self.program_counter_position.y,
-            },
-            Direction::Right => Coord {
-                x: (self.program_counter_position.x + 1) % self.dimensions.x,
-                y: self.program_counter_position.y,
-            },
-        };
-    }
 }
 
 // Possible interpreter modes

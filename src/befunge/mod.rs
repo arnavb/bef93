@@ -16,6 +16,7 @@
 
 mod error;
 mod interpreter;
+mod playfield;
 
 pub use self::interpreter::{Interpreter, Direction, Coord};
 pub use self::error::Error;
