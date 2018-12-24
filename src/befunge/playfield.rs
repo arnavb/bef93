@@ -15,8 +15,21 @@
  */
 
 
-use super::interpreter::{Coord, Direction};
 use super::error::Error as BefungeError;
+
+#[derive(Debug, PartialEq)]
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Coord {
+    pub x: i64,
+    pub y: i64,
+}
 
 // Represents the Befunge-93 playfield
 #[derive(Debug)]
@@ -71,7 +84,7 @@ impl Playfield {
     // Modifies the playfield at a specific position. This is needed for put (p)
     // calls.
     // If the passed position is out of bounds, a BefungeError will be returned.
-    pub fn set_character_at(&mut self, position: Coord, value: char) -> Result<(), BefungeError> {
+    pub fn set_character_at(&mut self, position: &Coord, value: char) -> Result<(), BefungeError> {
         if (position.x < 0 || position.y < 0)
             || (position.x > self.dimensions.x || position.y > self.dimensions.y) {
             Err(BefungeError(format!("Location ({}, {}) is out of bounds!", position.x, position.y)))
@@ -84,7 +97,7 @@ impl Playfield {
     // Gets the character on the playfield at a specific position.
     // This is needed for get (g) calls.
     // If the passed position is out of bounds, a BefungeError will be returned.
-    pub fn get_character_at(&self, position: Coord) -> Result<char, BefungeError> {
+    pub fn get_character_at(&self, position: &Coord) -> Result<char, BefungeError> {
         if (position.x < 0 || position.y < 0)
             || (position.x > self.dimensions.x || position.y > self.dimensions.y) {
             Err(BefungeError(format!("Location ({}, {}) is out of bounds!", position.x, position.y)))

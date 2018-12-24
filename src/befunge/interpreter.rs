@@ -22,21 +22,7 @@ use std::io::Write;
 
 // Throughout comments, befunge::Error will be referred to as BefungeError
 use super::error::Error as BefungeError;
-use super::playfield::Playfield;
-
-#[derive(Debug, PartialEq)]
-pub enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-#[derive(Debug, PartialEq)]
-pub struct Coord {
-    pub x: i64,
-    pub y: i64,
-}
+use super::playfield::{Coord, Direction, Playfield};
 
 // Possible interpreter modes
 #[derive(Debug)]
@@ -205,7 +191,7 @@ impl<Writable: Write> Interpreter<Writable> {
                 self.stack.push(b);
             }
             
-            _ => self.stack.push(self.playfield.get_character_at(Coord { y: a, x: b })? as i64),
+            _ => self.stack.push(self.playfield.get_character_at(&Coord { y: a, x: b })? as i64),
         }
         Ok(())
     }
@@ -246,7 +232,7 @@ impl<Writable: Write> Interpreter<Writable> {
                 };
                 let popped_value = self.stack.pop().unwrap_or(0);
 
-                self.playfield.set_character_at(position, convert_int_to_char(popped_value)?)?;
+                self.playfield.set_character_at(&position, convert_int_to_char(popped_value)?)?;
             }
             '&' => {
                 let mut input = String::new();
