@@ -267,13 +267,12 @@ impl<Writable: Write> Interpreter<Writable> {
     }
 }
 
-// TODO: Convert errors to BefungeErrors and possibly handle a greater range
-// of ASCII values
+// TODO: Convert errors to BefungeErrors
 fn convert_int_to_char(value: i64) -> Result<char, Box<StdError>> {
-    if value < 0 || value > 127 {
-        return Err("ASCII values must be between 0 and 127!".into());
+    if value < 0 || value > 255 {
+        return Err(BefungeError(format!("{} is not a valid ASCII value (between 0 and 255 inclusive)!", value)).into());
     }
     
     std::char::from_u32(value as u32)
-        .ok_or(format!("Unable to convert ASCII value {} to a char", value).into())
+        .ok_or_else(|| format!("Unable to convert ASCII value {} to a char", value).into())
 }
