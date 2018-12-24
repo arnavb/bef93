@@ -29,7 +29,7 @@ impl error::Error for Error {
     fn description(&self) -> &str {
         &self.0
     }
-    
+
     fn cause(&self) -> Option<&dyn error::Error> {
         None
     }

@@ -20,4 +20,4 @@ mod playfield;
 
 pub use self::error::Error;
 pub use self::interpreter::Interpreter;
-pub use self::playfield::{Direction, Coord};
+pub use self::playfield::{Coord, Direction};
