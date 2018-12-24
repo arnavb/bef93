@@ -32,14 +32,22 @@ matrix:
       env: TARGET=i686-pc-windows-msvc
     
     - os: linux
+      rust: 1.30.0
+      script: cargo test --release
+    
+    - name: "clippy"
+      os: linux
       rust: stable
       script:
         - rustup component add clippy
         - cargo clippy
     
-    - os: linux
-      rust: 1.30.0
-      script: cargo test --release
+    - name: "rustfmt"
+      os: linux
+      rust: stable
+      script:
+        - rustup component add rustfmt
+        - cargo fmt --all -- --check
     
     - os: linux
       rust: beta
