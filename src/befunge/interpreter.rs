@@ -262,3 +262,48 @@ fn convert_int_to_char(value: i64) -> Result<char, Box<StdError>> {
     std::char::from_u32(value as u32)
         .ok_or_else(|| format!("Unable to convert ASCII value {} to a char", value).into())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    mod initialization {
+        use super::*;
+        
+        
+    }
+    
+    mod convert_int_to_char {
+        use super::*;
+        
+        #[test]
+        fn test_basic() {
+            assert_eq!(convert_int_to_char(57).unwrap(), '9');
+            assert_eq!(convert_int_to_char(38).unwrap(), '&');
+            assert_eq!(convert_int_to_char(76).unwrap(), 'L');
+            assert_eq!(convert_int_to_char(103).unwrap(), 'g');
+        }
+        
+        #[test]
+        fn test_extended_character_set() {
+            assert_eq!(convert_int_to_char(233).unwrap(), 'é');
+            assert_eq!(convert_int_to_char(247).unwrap(), '÷');
+        }
+        
+        #[test]
+        fn test_upper_bound() {
+            assert_eq!(convert_int_to_char(255).unwrap(), 'ÿ');
+        }
+        
+        #[test]
+        fn test_lower_bound() {
+            assert_eq!(convert_int_to_char(0).unwrap(), 0_u8 as char);
+        }
+        
+        #[test]
+        fn test_out_of_bounds() {
+            assert!(convert_int_to_char(5555).is_err());
+            assert!(convert_int_to_char(-333).is_err());
+        }
+    }
+}

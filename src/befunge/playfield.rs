@@ -289,7 +289,7 @@ mod tests {
             let mut playfield = Playfield::new("lw\ngg",
                 Coord { x: 0, y: 0 }, Direction::Right).unwrap();
             
-            playfield.set_character_at(Coord { x: 1, y: 1 }, '#').unwrap();
+            playfield.set_character_at(&Coord { x: 1, y: 1 }, '#').unwrap();
             
             assert_eq!(playfield.code_map, vec![
                 ['l', 'w'],
@@ -302,7 +302,7 @@ mod tests {
             let mut playfield = Playfield::new("lw\ngg",
                 Coord { x: 0, y: 0 }, Direction::Right).unwrap();
             
-            let return_value = playfield.set_character_at(Coord { x: 10, y: 1 }, '#');
+            let return_value = playfield.set_character_at(&Coord { x: 10, y: 1 }, '#');
             
             assert!(return_value.is_err());
         }
@@ -316,7 +316,7 @@ mod tests {
             let playfield = Playfield::new("lw\ngg",
                 Coord { x: 0, y: 0 }, Direction::Right).unwrap();
             
-            let character = playfield.get_character_at(Coord { x: 1, y: 1 }).unwrap();
+            let character = playfield.get_character_at(&Coord { x: 1, y: 1 }).unwrap();
             
             assert_eq!(character, 'g');
         }
@@ -326,7 +326,7 @@ mod tests {
             let playfield = Playfield::new("lw\ngg",
                 Coord { x: 0, y: 0 }, Direction::Right).unwrap();
             
-            let return_value = playfield.get_character_at(Coord { x: 10, y: 1 });
+            let return_value = playfield.get_character_at(&Coord { x: 10, y: 1 });
             
             assert!(return_value.is_err());
         }
