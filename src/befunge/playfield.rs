@@ -63,7 +63,8 @@ impl Playfield {
                 format!("{:<width$}", line, width = width)
                     .chars()
                     .collect::<Vec<_>>()
-            }).collect::<Vec<Vec<_>>>();
+            })
+            .collect::<Vec<Vec<_>>>();
 
         let width = width as i64;
         let height = code_map.len() as i64;
@@ -171,7 +172,8 @@ mod tests {
                 "lwkwkl\ndhdhde\n333ddd",
                 Coord { x: 0, y: 0 },
                 Direction::Right,
-            ).unwrap();
+            )
+            .unwrap();
 
             // Check if code_map is properly initialized
             assert_eq!(

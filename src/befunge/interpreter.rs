@@ -272,7 +272,8 @@ fn convert_int_to_char(value: i64) -> Result<char, Box<StdError>> {
         return Err(BefungeError(format!(
             "{} is not a valid ASCII value (between 0 and 255 inclusive)!",
             value
-        )).into());
+        ))
+        .into());
     }
 
     std::char::from_u32(value as u32)

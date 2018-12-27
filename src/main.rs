@@ -54,7 +54,8 @@ fn cli() -> Result<(), Box<error::Error>> {
             clap::Arg::with_name("FILE")
                 .help("A file with Befunge-93 source code")
                 .required(true),
-        ).get_matches_safe()?;
+        )
+        .get_matches_safe()?;
 
     let resolved_filepath = resolve_filepath(matches.value_of("FILE").unwrap())?;
 
@@ -95,7 +96,8 @@ fn resolve_filepath(path: &str) -> Result<PathBuf, Box<error::Error>> {
             return Err(io::Error::new(
                 io::ErrorKind::NotFound,
                 "The passed path does not exist or does not refer to a file!",
-            ).into());
+            )
+            .into());
         }
     }
 
