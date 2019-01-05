@@ -150,11 +150,11 @@ impl<Writable: Write> Interpreter<Writable> {
             }
             '$' => (),
             '.' => {
-                write!(self.output_handle, "{} ", value);
+                write!(self.output_handle, "{} ", value)?;
                 self.output_handle.flush()?;
             }
             _ => {
-                write!(self.output_handle, "{}", convert_int_to_char(value)?);
+                write!(self.output_handle, "{}", convert_int_to_char(value)?)?;
                 self.output_handle.flush()?;
             }
         }
