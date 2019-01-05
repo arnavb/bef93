@@ -33,7 +33,9 @@ pub struct Coord {
 // Represents the Befunge-93 playfield
 #[derive(Debug)]
 pub struct Playfield {
-    code_map: Vec<Vec<char>>,
+    // Needed so that Intepreter unit tests can check if 
+    // proper initialization takes place
+    pub(super) code_map: Vec<Vec<char>>,
     pub dimensions: Coord,
 
     pub program_counter_position: Coord,

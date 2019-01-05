@@ -25,7 +25,7 @@ use super::error::Error as BefungeError;
 use super::playfield::{Coord, Direction, Playfield};
 
 // Possible interpreter modes
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum Mode {
     String,
     Command,
@@ -286,7 +286,56 @@ mod tests {
 
     mod initialization {
         use super::*;
+        
+        #[test]
+        fn test_basic() {
+            let interpreter = Interpreter::new("5:.,@", io::stdout(), None, None).unwrap();
 
+            // Test all fields are properly initialized
+            assert!(interpreter.stack.is_empty());
+            // TODO: Figure out how to check equality for output handles
+            // assert_eq!(interpreter.output_handle, io::stdout());
+            assert_eq!(interpreter.playfield.code_map, vec![['5', ':', '.', ',', '@']]);
+            assert_eq!(interpreter.mode, Mode::Command);
+        }
+
+        #[test]
+        fn test_basic_initial_position() {
+            let interpreter = Interpreter::new("5:.,@", io::stdout(), Some(Coord { x: 1, y: 0 }), None).unwrap();
+
+            assert_eq!(interpreter.playfield.program_counter_position, Coord { x: 1, y: 0 });
+            assert_eq!(interpreter.playfield.get_next_character(), ':');
+        }
+
+        #[test]
+        fn test_out_of_bounds_initial_position() {
+            let interpreter = Interpreter::new("5:.,@", io::stdout(), Some(Coord { x: 13333, y: 0 }), None);
+
+            assert!(interpreter.is_err());
+        }
+
+        #[test]
+        fn test_initial_direction() {
+            let interpreter = Interpreter::new("5:.,@", io::stdout(), None, Some(Direction::Up)).unwrap();
+
+            assert_eq!(interpreter.playfield.program_counter_direction, Direction::Up);
+        }
+
+        #[test]
+        fn test_initial_direction_and_position() {
+            let mut interpreter = Interpreter::new("5:.,@", io::stdout(), Some(Coord { x: 1, y: 0 }), Some(Direction::Left)).unwrap();
+            
+            assert_eq!(interpreter.playfield.program_counter_position, Coord { x: 1, y: 0 });
+            assert_eq!(interpreter.playfield.program_counter_direction, Direction::Left);
+
+            interpreter.playfield.update_program_counter();
+            assert_eq!(interpreter.playfield.get_next_character(), '5');
+        }
+
+        #[test]
+        fn test_alternative_output_handle() {
+            // TODO
+        }
     }
 
     mod convert_int_to_char {
