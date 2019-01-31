@@ -108,7 +108,7 @@ impl<Writable: Write> Interpreter<Writable> {
                     _ => {
                         return Err(
                             BefungeError(format!("{} is not a valid command!", curr_char)).into(),
-                        )
+                        );
                     }
                 },
             }
@@ -358,7 +358,15 @@ mod tests {
 
         #[test]
         fn test_alternative_output_handle() {
-            // TODO
+            let mut output: Vec<u8> = Vec::new();
+            {
+                // Needed for immutable borrow after mutable borrow
+                let mut interpreter = Interpreter::new("5:.,@", &mut output, None, None).unwrap();
+
+                interpreter.execute().unwrap();
+            }
+
+            assert_eq!(output, vec![53, 32, 5]);
         }
     }
 
