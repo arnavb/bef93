@@ -373,6 +373,17 @@ mod tests {
     mod befunge_code {
         use super::*;
 
+        mod example_programs {
+            use super::*;
+        }
+
+        mod individual_commands {
+            use super::*;
+        }
+
+        mod special_cases {
+            use super::*;
+        }
     }
 
     mod convert_int_to_char {
