@@ -370,6 +370,11 @@ mod tests {
         }
     }
 
+    mod befunge_code {
+        use super::*;
+
+    }
+
     mod convert_int_to_char {
         use super::*;
 
