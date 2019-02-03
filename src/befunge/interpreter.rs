@@ -359,14 +359,8 @@ mod tests {
         #[test]
         fn test_alternative_output_handle() {
             let mut output: Vec<u8> = Vec::new();
-            {
-                // Needed for immutable borrow after mutable borrow
-                let mut interpreter = Interpreter::new("5:.,@", &mut output, None, None).unwrap();
-
-                interpreter.execute().unwrap();
-            }
-
-            assert_eq!(output, vec![53, 32, 5]);
+            let interpreter = Interpreter::new("5:.,@", &mut output, None, None);
+            assert!(interpreter.is_ok());
         }
     }
 
@@ -375,6 +369,18 @@ mod tests {
 
         mod example_programs {
             use super::*;
+            // Alternative to integration tests
+
+            #[test]
+            fn test_hello_world() {
+                let mut output: Vec<u8> = Vec::new();
+                {
+                    let mut interpreter = Interpreter::new("64+\"!dlroW ,olleH\">:#,_@", &mut output, None, None).unwrap();
+
+                    interpreter.execute().unwrap();
+                }
+                assert_eq!(output, "Hello, World!\n".as_bytes());
+            }
         }
 
         mod individual_commands {
