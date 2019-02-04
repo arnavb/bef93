@@ -73,7 +73,8 @@ fn cli() -> Result<(), Box<error::Error>> {
 
     // TODO: Add support for redirected output to a file
     let mut output_handle = io::stdout();
-    let mut input_handle = io::stdin();
+    let input_handle = io::stdin();
+    let mut input_handle = input_handle.lock();
 
     // TODO: Add support for user supplied initial direction and position
     let mut interpreter = befunge::Interpreter::new(

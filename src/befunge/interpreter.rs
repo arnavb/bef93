@@ -18,7 +18,7 @@ use rand::{thread_rng, Rng};
 
 use std::error::Error as StdError;
 use std::io;
-use std::io::{Read, Write};
+use std::io::{BufRead, Read, Write};
 
 // Throughout comments, befunge::Error will be referred to as BefungeError
 use super::error::Error as BefungeError;
@@ -35,7 +35,7 @@ enum Mode {
 // This struct handles the execution of the Befunge-93 code. An instance of this
 // struct is initialized from the client CLI code.
 #[derive(Debug)]
-pub struct Interpreter<Writable: Write, Readable: Read> {
+pub struct Interpreter<Writable: Write, Readable: BufRead> {
     playfield: Playfield,
     stack: Vec<i64>,
     output_handle: Writable,
@@ -43,7 +43,7 @@ pub struct Interpreter<Writable: Write, Readable: Read> {
     mode: Mode,
 }
 
-impl<Writable: Write, Readable: Read> Interpreter<Writable, Readable> {
+impl<Writable: Write, Readable: BufRead> Interpreter<Writable, Readable> {
     // Intializes the interpreter with the program code, an output handle,
     // and optionally an initial program counter position and direction
     pub fn new(
@@ -291,8 +291,9 @@ mod tests {
 
         #[test]
         fn test_basic() {
+            let input_handle = io::stdin().lock();
             let interpreter =
-                Interpreter::new("5:.,@", io::stdout(), io::stdin(), None, None).unwrap();
+                Interpreter::new("5:.,@", io::stdout(), &mut input_handle, None, None).unwrap();
 
             // Test all fields are properly initialized
             assert!(interpreter.stack.is_empty());
