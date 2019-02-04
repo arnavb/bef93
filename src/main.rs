@@ -76,8 +76,13 @@ fn cli() -> Result<(), Box<error::Error>> {
     let mut input_handle = io::stdin();
 
     // TODO: Add support for user supplied initial direction and position
-    let mut interpreter =
-        befunge::Interpreter::new(&file_contents, &mut output_handle, &mut input_handle, None, None)?;
+    let mut interpreter = befunge::Interpreter::new(
+        &file_contents,
+        &mut output_handle,
+        &mut input_handle,
+        None,
+        None,
+    )?;
 
     interpreter.execute()?;
 
