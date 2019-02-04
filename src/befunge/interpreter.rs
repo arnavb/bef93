@@ -291,9 +291,9 @@ mod tests {
 
         #[test]
         fn test_basic() {
-            let input_handle = io::stdin().lock();
+            let input_handle = io::stdin();
             let interpreter =
-                Interpreter::new("5:.,@", io::stdout(), &mut input_handle, None, None).unwrap();
+                Interpreter::new("5:.,@", io::stdout(), input_handle.lock(), None, None).unwrap();
 
             // Test all fields are properly initialized
             assert!(interpreter.stack.is_empty());
@@ -308,10 +308,11 @@ mod tests {
 
         #[test]
         fn test_basic_initial_position() {
+            let input_handle = io::stdin();
             let interpreter = Interpreter::new(
                 "5:.,@",
                 io::stdout(),
-                io::stdin(),
+                input_handle.lock(),
                 Some(Coord { x: 1, y: 0 }),
                 None,
             )
@@ -326,10 +327,11 @@ mod tests {
 
         #[test]
         fn test_out_of_bounds_initial_position() {
+            let input_handle = io::stdin();
             let interpreter = Interpreter::new(
                 "5:.,@",
                 io::stdout(),
-                io::stdin(),
+                input_handle.lock(),
                 Some(Coord { x: 13333, y: 0 }),
                 None,
             );
@@ -339,10 +341,11 @@ mod tests {
 
         #[test]
         fn test_initial_direction() {
+            let input_handle = io::stdin();
             let interpreter = Interpreter::new(
                 "5:.,@",
                 io::stdout(),
-                io::stdin(),
+                input_handle.lock(),
                 None,
                 Some(Direction::Up),
             )
@@ -356,10 +359,11 @@ mod tests {
 
         #[test]
         fn test_initial_direction_and_position() {
+            let input_handle = io::stdin();
             let mut interpreter = Interpreter::new(
                 "5:.,@",
                 io::stdout(),
-                io::stdin(),
+                input_handle.lock(),
                 Some(Coord { x: 1, y: 0 }),
                 Some(Direction::Left),
             )
@@ -380,8 +384,10 @@ mod tests {
 
         #[test]
         fn test_alternative_output_handle() {
+            let input_handle = io::stdin();
             let mut output: Vec<u8> = Vec::new();
-            let interpreter = Interpreter::new("5:.,@", &mut output, io::stdin(), None, None);
+            let interpreter =
+                Interpreter::new("5:.,@", &mut output, input_handle.lock(), None, None);
             assert!(interpreter.is_ok());
         }
 
@@ -404,10 +410,11 @@ mod tests {
             fn test_hello_world() {
                 let mut output: Vec<u8> = Vec::new();
                 {
+                    let input_handle = io::stdin();
                     let mut interpreter = Interpreter::new(
                         "64+\"!dlroW ,olleH\">:#,_@",
                         &mut output,
-                        io::stdin(),
+                        input_handle.lock(),
                         None,
                         None,
                     )
