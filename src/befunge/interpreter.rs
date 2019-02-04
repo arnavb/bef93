@@ -18,7 +18,7 @@ use rand::{thread_rng, Rng};
 
 use std::error::Error as StdError;
 use std::io;
-use std::io::Write;
+use std::io::{Read, Write};
 
 // Throughout comments, befunge::Error will be referred to as BefungeError
 use super::error::Error as BefungeError;
@@ -35,23 +35,24 @@ enum Mode {
 // This struct handles the execution of the Befunge-93 code. An instance of this
 // struct is initialized from the client CLI code.
 #[derive(Debug)]
-pub struct Interpreter<Writable: Write> {
+pub struct Interpreter<Writable: Write, Readable: Read> {
     playfield: Playfield,
     stack: Vec<i64>,
-    output_handle: Writable, // Allow arbitrary output redirection to a struct
-    // implementing Write
+    output_handle: Writable,
+    input_handle: Readable,
     mode: Mode,
 }
 
-impl<Writable: Write> Interpreter<Writable> {
+impl<Writable: Write, Readable: Read> Interpreter<Writable, Readable> {
     // Intializes the interpreter with the program code, an output handle,
     // and optionally an initial program counter position and direction
     pub fn new(
         code: &str,
         output_handle: Writable,
+        input_handle: Readable,
         program_counter_position: Option<Coord>,
         program_counter_direction: Option<Direction>,
-    ) -> Result<Interpreter<Writable>, BefungeError> {
+    ) -> Result<Interpreter<Writable, Readable>, BefungeError> {
         Ok(Interpreter {
             playfield: Playfield::new(
                 code,
@@ -60,6 +61,7 @@ impl<Writable: Write> Interpreter<Writable> {
             )?,
             stack: Vec::new(),
             output_handle,
+            input_handle,
             mode: Mode::Command,
         })
     }
