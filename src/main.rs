@@ -27,22 +27,43 @@ use std::path::PathBuf;
 use std::{error, io, process};
 
 fn main() {
-    process::exit(if let Err(err) = cli() {
-        // Error handling code
-        if let Some(clap_err) = err.downcast_ref::<clap::Error>() {
+    let mut exit_code = 0;
+
+    // Error handling code
+    if let Err(err) = cli() {
+        exit_code = if let Some(clap_err) = err.downcast_ref::<clap::Error>() {
+            // Clap CLI errors
+
             eprint!("{}", clap_err);
+
             io::stdout()
                 .flush()
                 .unwrap_or_else(|_| eprintln!("Unable to flush stdout!"));
+
+            // Don't exit with 1 if help or version information are being displayed
+            match clap_err.kind {
+                clap::ErrorKind::HelpDisplayed | clap::ErrorKind::VersionDisplayed => 0,
+                _ => 1,
+            }
         } else if let Some(befunge_err) = err.downcast_ref::<befunge::Error>() {
+            // Befunge-93 code errors
+
             eprintln!("Befunge-93 Error: {}", befunge_err);
+            1
         } else if let Some(io_err) = err.downcast_ref::<io::Error>() {
+            // IO Errors
+
             eprintln!("IO Error: {}", io_err);
-        }
-        1
-    } else {
-        0
-    });
+            1
+        } else {
+            // Unknown error
+
+            eprintln!("Unknown error: {}", err);
+            1
+        };
+    }
+
+    process::exit(exit_code);
 }
 
 fn cli() -> Result<(), Box<error::Error>> {
