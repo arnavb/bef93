@@ -242,7 +242,7 @@ impl<Writable: Write, Readable: BufRead> Interpreter<Writable, Readable> {
             }
             '&' => {
                 let mut input = String::new();
-                self.input_handle.read_to_string(&mut input)?;
+                self.input_handle.read_line(&mut input)?;
 
                 self.stack.push(
                     input
@@ -253,7 +253,7 @@ impl<Writable: Write, Readable: BufRead> Interpreter<Writable, Readable> {
             }
             _ => {
                 let mut input = String::new();
-                self.input_handle.read_to_string(&mut input)?;
+                self.input_handle.read_line(&mut input)?;
 
                 self.stack.push(
                     input
