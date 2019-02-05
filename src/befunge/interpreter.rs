@@ -35,7 +35,11 @@ enum Mode {
 // This struct handles the execution of the Befunge-93 code. An instance of this
 // struct is initialized from the client CLI code.
 #[derive(Debug)]
-pub struct Interpreter<Writable: Write, Readable: BufRead> {
+pub struct Interpreter<Writable, Readable>
+where
+    Writable: Write,
+    Readable: BufRead,
+{
     playfield: Playfield,
     stack: Vec<i64>,
     output_handle: Writable,
@@ -43,7 +47,11 @@ pub struct Interpreter<Writable: Write, Readable: BufRead> {
     mode: Mode,
 }
 
-impl<Writable: Write, Readable: BufRead> Interpreter<Writable, Readable> {
+impl<Writable, Readable> Interpreter<Writable, Readable>
+where
+    Writable: Write,
+    Readable: BufRead,
+{
     // Intializes the interpreter with the program code, an output handle,
     // and optionally an initial program counter position and direction
     pub fn new(
