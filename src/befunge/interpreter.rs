@@ -17,8 +17,7 @@
 use rand::{thread_rng, Rng};
 
 use std::error::Error as StdError;
-use std::io;
-use std::io::{BufRead, Read, Write};
+use std::io::{BufRead, Write};
 
 // Throughout comments, befunge::Error will be referred to as BefungeError
 use super::error::Error as BefungeError;
@@ -293,6 +292,7 @@ fn convert_int_to_char(value: i64) -> Result<char, Box<StdError>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io;
 
     mod initialization {
         use super::*;
