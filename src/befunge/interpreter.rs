@@ -18,7 +18,7 @@ use rand::{thread_rng, Rng};
 
 use std::error::Error as StdError;
 use std::io;
-use std::io::Write;
+use std::io::{BufRead, Read, Write};
 
 // Throughout comments, befunge::Error will be referred to as BefungeError
 use super::error::Error as BefungeError;
@@ -35,23 +35,32 @@ enum Mode {
 // This struct handles the execution of the Befunge-93 code. An instance of this
 // struct is initialized from the client CLI code.
 #[derive(Debug)]
-pub struct Interpreter<Writable: Write> {
+pub struct Interpreter<Writable, Readable>
+where
+    Writable: Write,
+    Readable: BufRead,
+{
     playfield: Playfield,
     stack: Vec<i64>,
-    output_handle: Writable, // Allow arbitrary output redirection to a struct
-    // implementing Write
+    output_handle: Writable,
+    input_handle: Readable,
     mode: Mode,
 }
 
-impl<Writable: Write> Interpreter<Writable> {
+impl<Writable, Readable> Interpreter<Writable, Readable>
+where
+    Writable: Write,
+    Readable: BufRead,
+{
     // Intializes the interpreter with the program code, an output handle,
     // and optionally an initial program counter position and direction
     pub fn new(
         code: &str,
         output_handle: Writable,
+        input_handle: Readable,
         program_counter_position: Option<Coord>,
         program_counter_direction: Option<Direction>,
-    ) -> Result<Interpreter<Writable>, BefungeError> {
+    ) -> Result<Interpreter<Writable, Readable>, BefungeError> {
         Ok(Interpreter {
             playfield: Playfield::new(
                 code,
@@ -60,6 +69,7 @@ impl<Writable: Write> Interpreter<Writable> {
             )?,
             stack: Vec::new(),
             output_handle,
+            input_handle,
             mode: Mode::Command,
         })
     }
@@ -240,7 +250,7 @@ impl<Writable: Write> Interpreter<Writable> {
             }
             '&' => {
                 let mut input = String::new();
-                io::stdin().read_line(&mut input)?;
+                self.input_handle.read_line(&mut input)?;
 
                 self.stack.push(
                     input
@@ -251,7 +261,7 @@ impl<Writable: Write> Interpreter<Writable> {
             }
             _ => {
                 let mut input = String::new();
-                io::stdin().read_line(&mut input)?;
+                self.input_handle.read_line(&mut input)?;
 
                 self.stack.push(
                     input
@@ -289,7 +299,9 @@ mod tests {
 
         #[test]
         fn test_basic() {
-            let interpreter = Interpreter::new("5:.,@", io::stdout(), None, None).unwrap();
+            let input_handle = io::stdin();
+            let interpreter =
+                Interpreter::new("5:.,@", io::stdout(), input_handle.lock(), None, None).unwrap();
 
             // Test all fields are properly initialized
             assert!(interpreter.stack.is_empty());
@@ -304,8 +316,15 @@ mod tests {
 
         #[test]
         fn test_basic_initial_position() {
-            let interpreter =
-                Interpreter::new("5:.,@", io::stdout(), Some(Coord { x: 1, y: 0 }), None).unwrap();
+            let input_handle = io::stdin();
+            let interpreter = Interpreter::new(
+                "5:.,@",
+                io::stdout(),
+                input_handle.lock(),
+                Some(Coord { x: 1, y: 0 }),
+                None,
+            )
+            .unwrap();
 
             assert_eq!(
                 interpreter.playfield.program_counter_position,
@@ -316,16 +335,29 @@ mod tests {
 
         #[test]
         fn test_out_of_bounds_initial_position() {
-            let interpreter =
-                Interpreter::new("5:.,@", io::stdout(), Some(Coord { x: 13333, y: 0 }), None);
+            let input_handle = io::stdin();
+            let interpreter = Interpreter::new(
+                "5:.,@",
+                io::stdout(),
+                input_handle.lock(),
+                Some(Coord { x: 13333, y: 0 }),
+                None,
+            );
 
             assert!(interpreter.is_err());
         }
 
         #[test]
         fn test_initial_direction() {
-            let interpreter =
-                Interpreter::new("5:.,@", io::stdout(), None, Some(Direction::Up)).unwrap();
+            let input_handle = io::stdin();
+            let interpreter = Interpreter::new(
+                "5:.,@",
+                io::stdout(),
+                input_handle.lock(),
+                None,
+                Some(Direction::Up),
+            )
+            .unwrap();
 
             assert_eq!(
                 interpreter.playfield.program_counter_direction,
@@ -335,9 +367,11 @@ mod tests {
 
         #[test]
         fn test_initial_direction_and_position() {
+            let input_handle = io::stdin();
             let mut interpreter = Interpreter::new(
                 "5:.,@",
                 io::stdout(),
+                input_handle.lock(),
                 Some(Coord { x: 1, y: 0 }),
                 Some(Direction::Left),
             )
@@ -358,8 +392,17 @@ mod tests {
 
         #[test]
         fn test_alternative_output_handle() {
+            let input_handle = io::stdin();
             let mut output: Vec<u8> = Vec::new();
-            let interpreter = Interpreter::new("5:.,@", &mut output, None, None);
+            let interpreter =
+                Interpreter::new("5:.,@", &mut output, input_handle.lock(), None, None);
+            assert!(interpreter.is_ok());
+        }
+
+        #[test]
+        fn test_alternative_input_handle() {
+            let mut input = "input".as_bytes();
+            let interpreter = Interpreter::new("5:.,@", io::stdout(), &mut input, None, None);
             assert!(interpreter.is_ok());
         }
     }
@@ -375,7 +418,15 @@ mod tests {
             fn test_hello_world() {
                 let mut output: Vec<u8> = Vec::new();
                 {
-                    let mut interpreter = Interpreter::new("64+\"!dlroW ,olleH\">:#,_@", &mut output, None, None).unwrap();
+                    let input_handle = io::stdin();
+                    let mut interpreter = Interpreter::new(
+                        "64+\"!dlroW ,olleH\">:#,_@",
+                        &mut output,
+                        input_handle.lock(),
+                        None,
+                        None,
+                    )
+                    .unwrap();
 
                     interpreter.execute().unwrap();
                 }
