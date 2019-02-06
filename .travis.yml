@@ -4,7 +4,7 @@ cache: cargo
 
 env:
   global:
-    - CRATE_NAME=test-rust-deploy-releases
+    - CRATE_NAME=bef93
 
 matrix:
   include:
@@ -68,6 +68,7 @@ script:
   
 before_deploy:
   - cargo build --release --target=$TARGET
+  - cp ./{README.md,LICENSE} $CRATE_NAME-$TRAVIS_TAG-$TARGET
   - mkdir $CRATE_NAME-$TRAVIS_TAG-$TARGET
   - |
     if [[ $TRAVIS_OS_NAME == "windows" ]]; then
