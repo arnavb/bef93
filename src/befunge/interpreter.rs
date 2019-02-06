@@ -393,9 +393,9 @@ mod tests {
         #[test]
         fn test_alternative_output_handle() {
             let input_handle = io::stdin();
-            let mut output: Vec<u8> = Vec::new();
+            let mut output_handle: Vec<u8> = Vec::new();
             let interpreter =
-                Interpreter::new("5:.,@", &mut output, input_handle.lock(), None, None);
+                Interpreter::new("5:.,@", &mut output_handle, input_handle.lock(), None, None);
             assert!(interpreter.is_ok());
         }
 
@@ -412,16 +412,17 @@ mod tests {
 
         mod example_programs {
             use super::*;
-            // Alternative to integration tests
+            // Alternative to integration tests (temporarily)
+            // These programs are taken from https://esolangs.org/wiki/Befunge#Befunge-93_and_Befunge-98
 
             #[test]
             fn test_hello_world() {
-                let mut output: Vec<u8> = Vec::new();
+                let mut output_handle: Vec<u8> = Vec::new();
                 {
                     let input_handle = io::stdin();
                     let mut interpreter = Interpreter::new(
                         "64+\"!dlroW ,olleH\">:#,_@",
-                        &mut output,
+                        &mut output_handle,
                         input_handle.lock(),
                         None,
                         None,
@@ -430,7 +431,123 @@ mod tests {
 
                     interpreter.execute().unwrap();
                 }
-                assert_eq!(output, "Hello, World!\n".as_bytes());
+                assert_eq!(output_handle, "Hello, World!\n".as_bytes());
+            }
+
+            #[test]
+            fn test_factorial() {
+                let mut output_handle = Vec::new();
+                {
+                    let input_handle = "5".as_bytes();
+                    let mut interpreter = Interpreter::new(
+                        "&>:1-:v v *_$.@\n ^    _$>\\:^",
+                        &mut output_handle,
+                        input_handle,
+                        None,
+                        None,
+                    )
+                    .unwrap();
+
+                    interpreter.execute().unwrap();
+                }
+                assert_eq!(output_handle, "120 ".as_bytes());
+            }
+
+            #[test]
+            fn test_sieve_of_eratosthenes() {
+                let mut output_handle = Vec::new();
+                {
+                    let input_handle = io::stdin();
+
+                    let mut interpreter = Interpreter::new(
+                        "2>:3g\" \"-!v\\  g30          <\n |!`\"O\":+1_:.:03p>03g+:\"O\"`|\n @               ^  p3\\\" \":<\n2 234567890123456789012345678901234567890123456789012345678901234567890123456789",
+                        &mut output_handle,
+                        input_handle.lock(),
+                        None,
+                        None,
+                    )
+                    .unwrap();
+
+                    interpreter.execute().unwrap();
+                }
+
+                assert_eq!(
+                    output_handle,
+                    "2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 ".as_bytes()
+                );
+            }
+
+            #[test]
+            fn test_quine_one() {
+                let mut output_handle = Vec::new();
+                {
+                    let input_handle = io::stdin();
+
+                    let mut interpreter = Interpreter::new(
+                        "01->1# +# :# 0# g# ,# :# 5# 8# *# 4# +# -# _@",
+                        &mut output_handle,
+                        input_handle.lock(),
+                        None,
+                        None,
+                    )
+                    .unwrap();
+
+                    interpreter.execute().unwrap();
+                }
+
+                assert_eq!(
+                    output_handle,
+                    "01->1# +# :# 0# g# ,# :# 5# 8# *# 4# +# -# _@".as_bytes()
+                );
+            }
+
+            #[test]
+            fn test_quine_two() {
+                let mut output_handle = Vec::new();
+                {
+                    let input_handle = io::stdin();
+
+                    let mut interpreter = Interpreter::new(
+                        "0 v\n \"<@_ #! #: #,<*2-1*92,*84,*25,+*92*4*55.0",
+                        &mut output_handle,
+                        input_handle.lock(),
+                        None,
+                        None,
+                    )
+                    .unwrap();
+
+                    interpreter.execute().unwrap();
+                }
+
+                assert_eq!(
+                    output_handle,
+                    "0 v\n \"<@_ #! #: #,<*2-1*92,*84,*25,+*92*4*55.0 ".as_bytes()
+                );
+            }
+
+            #[should_panic]
+            #[test]
+            fn test_quine_three() {
+                let mut output_handle = Vec::new();
+                {
+                    let input_handle = io::stdin();
+
+                    let mut interpreter = Interpreter::new(
+                        ":0g,:\"~\"`#@_1+0\"Quines are Fun\">_",
+                        &mut output_handle,
+                        input_handle.lock(),
+                        None,
+                        None,
+                    )
+                    .unwrap();
+
+                    interpreter.execute().unwrap();
+                }
+
+                assert_eq!(
+                    output_handle,
+                    ":0g,:\"~\"`#@_1+0\"Quines are Fun\">_".as_bytes()
+                );
             }
         }
 
