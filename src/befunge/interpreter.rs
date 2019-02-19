@@ -602,7 +602,10 @@ mod tests {
                         interpreter.execute().unwrap();
                         let result = interpreter.run_unary_operation('_');
                         assert!(result.is_ok());
-                        assert_eq!(interpreter.playfield.program_counter_direction, Direction::Right);
+                        assert_eq!(
+                            interpreter.playfield.program_counter_direction,
+                            Direction::Right
+                        );
                     }
 
                     #[test]
@@ -615,7 +618,10 @@ mod tests {
                         interpreter.execute().unwrap();
                         let result = interpreter.run_unary_operation('_');
                         assert!(result.is_ok());
-                        assert_eq!(interpreter.playfield.program_counter_direction, Direction::Left);
+                        assert_eq!(
+                            interpreter.playfield.program_counter_direction,
+                            Direction::Left
+                        );
                     }
                 }
 
@@ -632,7 +638,10 @@ mod tests {
                         interpreter.execute().unwrap();
                         let result = interpreter.run_unary_operation('|');
                         assert!(result.is_ok());
-                        assert_eq!(interpreter.playfield.program_counter_direction, Direction::Down);
+                        assert_eq!(
+                            interpreter.playfield.program_counter_direction,
+                            Direction::Down
+                        );
                     }
 
                     #[test]
@@ -645,7 +654,10 @@ mod tests {
                         interpreter.execute().unwrap();
                         let result = interpreter.run_unary_operation('|');
                         assert!(result.is_ok());
-                        assert_eq!(interpreter.playfield.program_counter_direction, Direction::Up);
+                        assert_eq!(
+                            interpreter.playfield.program_counter_direction,
+                            Direction::Up
+                        );
                     }
                 }
             }
