@@ -588,6 +588,66 @@ mod tests {
                         assert_eq!(interpreter.stack.last().unwrap(), &1);
                     }
                 }
+
+                mod horizontal_if {
+                    use super::*;
+
+                    #[test]
+                    fn test_evaluates_to_true() {
+                        let input_handle = io::stdin();
+                        let mut interpreter =
+                            Interpreter::new("0@", io::stdout(), input_handle.lock(), None, None)
+                                .unwrap();
+
+                        interpreter.execute().unwrap();
+                        let result = interpreter.run_unary_operation('_');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.playfield.program_counter_direction, Direction::Right);
+                    }
+
+                    #[test]
+                    fn test_evaluates_to_false() {
+                        let input_handle = io::stdin();
+                        let mut interpreter =
+                            Interpreter::new("9@", io::stdout(), input_handle.lock(), None, None)
+                                .unwrap();
+
+                        interpreter.execute().unwrap();
+                        let result = interpreter.run_unary_operation('_');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.playfield.program_counter_direction, Direction::Left);
+                    }
+                }
+
+                mod vertical_if {
+                    use super::*;
+
+                    #[test]
+                    fn test_evaluates_to_true() {
+                        let input_handle = io::stdin();
+                        let mut interpreter =
+                            Interpreter::new("0@", io::stdout(), input_handle.lock(), None, None)
+                                .unwrap();
+
+                        interpreter.execute().unwrap();
+                        let result = interpreter.run_unary_operation('|');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.playfield.program_counter_direction, Direction::Down);
+                    }
+
+                    #[test]
+                    fn test_evaluates_to_false() {
+                        let input_handle = io::stdin();
+                        let mut interpreter =
+                            Interpreter::new("9@", io::stdout(), input_handle.lock(), None, None)
+                                .unwrap();
+
+                        interpreter.execute().unwrap();
+                        let result = interpreter.run_unary_operation('|');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.playfield.program_counter_direction, Direction::Up);
+                    }
+                }
             }
         }
 
