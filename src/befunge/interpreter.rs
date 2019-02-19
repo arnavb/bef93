@@ -660,6 +660,20 @@ mod tests {
                         );
                     }
                 }
+
+                #[test]
+                fn test_duplicate() {
+                    let input_handle = io::stdin();
+                    let mut interpreter =
+                        Interpreter::new("5@", io::stdout(), input_handle.lock(), None, None)
+                            .unwrap();
+
+                    interpreter.execute().unwrap();
+
+                    let result = interpreter.run_unary_operation(':');
+                    assert!(result.is_ok());
+                    assert_eq!(interpreter.stack, vec![5, 5]);
+                }
             }
         }
 
