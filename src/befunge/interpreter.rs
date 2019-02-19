@@ -553,6 +553,42 @@ mod tests {
 
         mod individual_commands {
             use super::*;
+
+            mod unary_operators {
+                use super::*;
+
+                mod not_operator {
+                    use super::*;
+
+                    #[test]
+                    fn test_true_value() {
+                        let input_handle = io::stdin();
+                        let mut interpreter =
+                            Interpreter::new("5@", io::stdout(), input_handle.lock(), None, None)
+                                .unwrap();
+
+                        interpreter.execute().unwrap();
+
+                        let result = interpreter.run_unary_operation('!');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &0);
+                    }
+
+                    #[test]
+                    fn test_false_value() {
+                        let input_handle = io::stdin();
+                        let mut interpreter =
+                            Interpreter::new("0@", io::stdout(), input_handle.lock(), None, None)
+                                .unwrap();
+
+                        interpreter.execute().unwrap();
+
+                        let result = interpreter.run_unary_operation('!');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &1);
+                    }
+                }
+            }
         }
 
         mod special_cases {
