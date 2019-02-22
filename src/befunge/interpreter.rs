@@ -674,6 +674,42 @@ mod tests {
                     assert!(result.is_ok());
                     assert_eq!(interpreter.stack, vec![5, 5]);
                 }
+
+                #[test]
+                fn test_pop() {
+                    let input_handle = io::stdin();
+                    let mut interpreter =
+                        Interpreter::new("5@", io::stdout(), input_handle.lock(), None, None)
+                            .unwrap();
+
+                    interpreter.execute().unwrap();
+                    let result = interpreter.run_unary_operation('$');
+                    assert!(result.is_ok());
+
+                    assert_eq!(interpreter.stack, vec![]);
+                }
+
+                #[test]
+                fn test_write_integer() {
+                    let input_handle = io::stdin();
+                    let mut output_handle = Vec::new();
+                    {
+                        let mut interpreter = Interpreter::new(
+                            "5@",
+                            &mut output_handle,
+                            input_handle.lock(),
+                            None,
+                            None,
+                        )
+                        .unwrap();
+
+                        interpreter.execute().unwrap();
+                        let result = interpreter.run_unary_operation('.');
+                        assert!(result.is_ok());
+                    }
+
+                    assert_eq!(output_handle, "5 ".as_bytes());
+                }
             }
         }
 
