@@ -710,6 +710,160 @@ mod tests {
 
                     assert_eq!(output_handle, "5 ".as_bytes());
                 }
+
+                mod write_character {
+                    use super::*;
+
+                    #[test]
+                    fn test_basic() {
+                        let input_handle = io::stdin();
+                        let mut output_handle = Vec::new();
+                        {
+                            let mut interpreter = Interpreter::new(
+                                "\"a\"@",
+                                &mut output_handle,
+                                input_handle.lock(),
+                                None,
+                                None,
+                            )
+                            .unwrap();
+
+                            interpreter.execute().unwrap();
+                            let result = interpreter.run_unary_operation(',');
+                            assert!(result.is_ok());
+                        }
+
+                        assert_eq!(output_handle, "a".as_bytes());
+                    }
+
+                    #[test]
+                    fn test_non_printable_character() {
+                        let input_handle = io::stdin();
+                        let mut output_handle = Vec::new();
+                        {
+                            let mut interpreter = Interpreter::new(
+                                "55+@",
+                                &mut output_handle,
+                                input_handle.lock(),
+                                None,
+                                None,
+                            )
+                            .unwrap();
+
+                            interpreter.execute().unwrap();
+                            let result = interpreter.run_unary_operation(',');
+                            assert!(result.is_ok());
+                        }
+
+                        assert_eq!(output_handle, "\n".as_bytes());
+                    }
+
+                    #[test]
+                    fn test_special_characters() {
+                        let input_handle = io::stdin();
+                        let mut output_handle = Vec::new();
+                        {
+                            let mut interpreter = Interpreter::new(
+                                "\"á\"@",
+                                &mut output_handle,
+                                input_handle.lock(),
+                                None,
+                                None,
+                            )
+                            .unwrap();
+
+                            interpreter.execute().unwrap();
+                            let result = interpreter.run_unary_operation(',');
+                            assert!(result.is_ok());
+                        }
+
+                        assert_eq!(output_handle, "á".as_bytes());
+                    }
+                }
+
+
+            }
+
+            mod binary_operators {
+                use super::*;
+
+                mod addition {
+                    use super::*;
+
+                    #[test]
+                    fn test_basic() {
+                        let input_handle = io::stdin();
+                        let mut interpreter =
+                            Interpreter::new("55@", io::stdout(), input_handle.lock(), None, None)
+                                .unwrap();
+
+                        interpreter.execute().unwrap();
+
+                        let result = interpreter.run_binary_operation('+');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &10);
+                    }
+
+                    #[test]
+                    fn test_only_one_operand() {
+                        let input_handle = io::stdin();
+                        let mut interpreter =
+                            Interpreter::new("5@", io::stdout(), input_handle.lock(), None, None)
+                                .unwrap();
+
+                        interpreter.execute().unwrap();
+
+                        let result = interpreter.run_binary_operation('+');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &5);
+                    }
+
+                    #[test]
+                    fn test_only_no_operands() {
+                        let input_handle = io::stdin();
+                        let mut interpreter =
+                            Interpreter::new("@", io::stdout(), input_handle.lock(), None, None)
+                                .unwrap();
+
+                        interpreter.execute().unwrap();
+
+                        let result = interpreter.run_binary_operation('+');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &0);
+                    }
+                }
+
+                mod subtraction {
+                    use super::*;
+
+                    #[test]
+                    fn test_basic() {
+                        let input_handle = io::stdin();
+                        let mut interpreter =
+                            Interpreter::new("55@", io::stdout(), input_handle.lock(), None, None)
+                                .unwrap();
+
+                        interpreter.execute().unwrap();
+
+                        let result = interpreter.run_binary_operation('-');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &0);
+                    }
+
+                    #[test]
+                    fn test_negative_result() {
+                        let input_handle = io::stdin();
+                        let mut interpreter =
+                            Interpreter::new("57@", io::stdout(), input_handle.lock(), None, None)
+                                .unwrap();
+
+                        interpreter.execute().unwrap();
+
+                        let result = interpreter.run_binary_operation('-');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &-2);
+                    }
+                }
             }
         }
 
