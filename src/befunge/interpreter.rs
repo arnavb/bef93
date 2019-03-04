@@ -781,7 +781,6 @@ mod tests {
                     }
                 }
 
-
             }
 
             mod binary_operators {
@@ -863,6 +862,161 @@ mod tests {
                         assert!(result.is_ok());
                         assert_eq!(interpreter.stack.last().unwrap(), &-2);
                     }
+                }
+
+                #[test]
+                fn test_multiplication() {
+                    let input_handle = io::stdin();
+                    let mut interpreter =
+                        Interpreter::new("56@", io::stdout(), input_handle.lock(), None, None)
+                            .unwrap();
+
+                    interpreter.execute().unwrap();
+
+                    let result = interpreter.run_binary_operation('*');
+                    assert!(result.is_ok());
+                    assert_eq!(interpreter.stack.last().unwrap(), &30);
+                }
+
+                mod division {
+                    use super::*;
+
+                    #[test]
+                    fn test_basic() {
+                        let input_handle = io::stdin();
+                        let mut interpreter =
+                            Interpreter::new("62@", io::stdout(), input_handle.lock(), None, None)
+                                .unwrap();
+
+                        interpreter.execute().unwrap();
+
+                        let result = interpreter.run_binary_operation('/');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &3);
+                    }
+
+                    #[test]
+                    fn test_integer_division() {
+                        let input_handle = io::stdin();
+                        let mut interpreter =
+                            Interpreter::new("72@", io::stdout(), input_handle.lock(), None, None)
+                                .unwrap();
+
+                        interpreter.execute().unwrap();
+
+                        let result = interpreter.run_binary_operation('/');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &3);
+                    }
+
+                    #[test]
+                    fn test_division_by_zero() {
+                        let input_handle = io::stdin();
+                        let mut interpreter =
+                            Interpreter::new("60@", io::stdout(), input_handle.lock(), None, None)
+                                .unwrap();
+
+                        interpreter.execute().unwrap();
+
+                        let result = interpreter.run_binary_operation('/');
+                        assert!(result.is_err());
+                    }
+                }
+
+                mod modulo {
+                    use super::*;
+
+                    #[test]
+                    fn test_basic() {
+                        let input_handle = io::stdin();
+                        let mut interpreter =
+                            Interpreter::new("64@", io::stdout(), input_handle.lock(), None, None)
+                                .unwrap();
+
+                        interpreter.execute().unwrap();
+
+                        let result = interpreter.run_binary_operation('%');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &2);
+                    }
+
+                    #[test]
+                    fn test_modulo_by_zero() {
+                        let input_handle = io::stdin();
+                        let mut interpreter =
+                            Interpreter::new("60@", io::stdout(), input_handle.lock(), None, None)
+                                .unwrap();
+
+                        interpreter.execute().unwrap();
+
+                        let result = interpreter.run_binary_operation('%');
+                        assert!(result.is_err());
+                    }
+                }
+
+                mod greater_than {
+                    use super::*;
+
+                    #[test]
+                    fn test_basic() {
+                        let input_handle = io::stdin();
+                        let mut interpreter =
+                            Interpreter::new("65@", io::stdout(), input_handle.lock(), None, None)
+                                .unwrap();
+
+                        interpreter.execute().unwrap();
+
+                        let result = interpreter.run_binary_operation('`');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &1);
+                    }
+
+                    #[test]
+                    fn test_false_value() {
+                        let input_handle = io::stdin();
+                        let mut interpreter =
+                            Interpreter::new("56@", io::stdout(), input_handle.lock(), None, None)
+                                .unwrap();
+
+                        interpreter.execute().unwrap();
+
+                        let result = interpreter.run_binary_operation('`');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &0);
+                    }
+
+                    #[test]
+                    fn test_equal_values() {
+                        let input_handle = io::stdin();
+                        let mut interpreter =
+                            Interpreter::new("66@", io::stdout(), input_handle.lock(), None, None)
+                                .unwrap();
+
+                        interpreter.execute().unwrap();
+
+                        let result = interpreter.run_binary_operation('`');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &0);
+                    }
+                }
+
+                #[test]
+                fn test_swap() {
+                    let input_handle = io::stdin();
+                    let mut interpreter =
+                        Interpreter::new("65@", io::stdout(), input_handle.lock(), None, None)
+                            .unwrap();
+
+                    interpreter.execute().unwrap();
+
+                    let result = interpreter.run_binary_operation('\\');
+                    assert!(result.is_ok());
+                    assert_eq!(interpreter.stack, vec![5, 6]);
+                }
+
+                mod get {
+                    use super::*;
+                    // TODO
                 }
             }
         }
