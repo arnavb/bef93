@@ -1056,6 +1056,133 @@ mod tests {
                     }
                 }
             }
+
+            mod other_operators {
+                use super::*;
+
+                #[test]
+                fn test_noop() {
+                    let input_handle = io::stdin();
+                    let mut interpreter =
+                        Interpreter::new("5@", io::stdout(), input_handle.lock(), None, None)
+                            .unwrap();
+
+                    interpreter.execute().unwrap();
+
+                    let result = interpreter.run_other_operation(' ');
+                    assert!(result.is_ok());
+                    assert_eq!(interpreter.stack.last().unwrap(), &5);
+                }
+
+                #[test]
+                fn test_direction_right() {
+                    let input_handle = io::stdin();
+                    let mut interpreter =
+                        Interpreter::new("5@", io::stdout(), input_handle.lock(), None, None)
+                            .unwrap();
+
+                    interpreter.execute().unwrap();
+
+                    let result = interpreter.run_other_operation('>');
+                    assert!(result.is_ok());
+                    assert_eq!(
+                        interpreter.playfield.program_counter_direction,
+                        Direction::Right
+                    );
+                }
+
+                #[test]
+                fn test_direction_left() {
+                    let input_handle = io::stdin();
+                    let mut interpreter =
+                        Interpreter::new("5@", io::stdout(), input_handle.lock(), None, None)
+                            .unwrap();
+
+                    interpreter.execute().unwrap();
+
+                    let result = interpreter.run_other_operation('<');
+                    assert!(result.is_ok());
+                    assert_eq!(
+                        interpreter.playfield.program_counter_direction,
+                        Direction::Left
+                    );
+                }
+
+                #[test]
+                fn test_direction_down() {
+                    let input_handle = io::stdin();
+                    let mut interpreter =
+                        Interpreter::new("5@", io::stdout(), input_handle.lock(), None, None)
+                            .unwrap();
+
+                    interpreter.execute().unwrap();
+
+                    let result = interpreter.run_other_operation('v');
+                    assert!(result.is_ok());
+                    assert_eq!(
+                        interpreter.playfield.program_counter_direction,
+                        Direction::Down
+                    );
+                }
+
+                #[test]
+                fn test_direction_up() {
+                    let input_handle = io::stdin();
+                    let mut interpreter =
+                        Interpreter::new("5@", io::stdout(), input_handle.lock(), None, None)
+                            .unwrap();
+
+                    interpreter.execute().unwrap();
+
+                    let result = interpreter.run_other_operation('^');
+                    assert!(result.is_ok());
+                    assert_eq!(
+                        interpreter.playfield.program_counter_direction,
+                        Direction::Up
+                    );
+                }
+
+                #[test]
+                fn test_random_direction() {
+                    let input_handle = io::stdin();
+                    let mut interpreter =
+                        Interpreter::new("5@", io::stdout(), input_handle.lock(), None, None)
+                            .unwrap();
+
+                    interpreter.execute().unwrap();
+
+                    let result = interpreter.run_other_operation('?');
+                    assert!(result.is_ok());
+                }
+
+                #[test]
+                fn test_string_mode_change() {
+                    let input_handle = io::stdin();
+                    let mut interpreter =
+                        Interpreter::new("5@", io::stdout(), input_handle.lock(), None, None)
+                            .unwrap();
+
+                    interpreter.execute().unwrap();
+
+                    let result = interpreter.run_other_operation('"');
+                    assert!(result.is_ok());
+                    assert_eq!(interpreter.mode, Mode::String);
+                }
+
+                #[test]
+                fn test_bridge_mode_change() {
+                    let input_handle = io::stdin();
+                    let mut interpreter =
+                        Interpreter::new("5@", io::stdout(), input_handle.lock(), None, None)
+                            .unwrap();
+
+                    interpreter.execute().unwrap();
+
+                    let result = interpreter.run_other_operation('#');
+                    assert!(result.is_ok());
+                    assert_eq!(interpreter.mode, Mode::Bridge);
+                }
+            }
         }
 
         mod special_cases {
