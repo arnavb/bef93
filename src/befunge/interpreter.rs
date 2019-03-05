@@ -82,6 +82,7 @@ where
     //   will be returned.
     pub fn execute(&mut self) -> Result<(), Box<StdError>> {
         loop {
+            println!("{:?}", self.stack);
             // Empty program is an infinite loop
             if self.playfield.dimensions.x == 0 {
                 continue;
@@ -1016,7 +1017,43 @@ mod tests {
 
                 mod get {
                     use super::*;
-                    // TODO
+
+                    #[test]
+                    fn test_basic() {
+                        let input_handle = io::stdin();
+                        let mut interpreter = Interpreter::new(
+                            "49v\n  >10@",
+                            io::stdout(),
+                            input_handle.lock(),
+                            None,
+                            None,
+                        )
+                        .unwrap();
+
+                        interpreter.execute().unwrap();
+
+                        let result = interpreter.run_binary_operation('g');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &57);
+                    }
+
+                    #[test]
+                    fn test_out_of_bounds() {
+                        let input_handle = io::stdin();
+                        let mut interpreter = Interpreter::new(
+                            "49v\n  >15@",
+                            io::stdout(),
+                            input_handle.lock(),
+                            None,
+                            None,
+                        )
+                        .unwrap();
+
+                        interpreter.execute().unwrap();
+
+                        let result = interpreter.run_binary_operation('g');
+                        assert!(result.is_err());
+                    }
                 }
             }
         }
