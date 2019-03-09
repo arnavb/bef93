@@ -294,6 +294,25 @@ mod tests {
     use super::*;
     use std::io;
 
+    // fn setup_interpreter(code: &str) -> Interpreter<io::Stdout, io::StdinLock> {
+    //     let input_handle = io::stdin();
+    //     let interpreter = Interpreter::new(code, io::stdout(), input_handle.lock(), None, None);
+    //     interpreter.unwrap()
+    // }
+
+    fn setup_interpreter<'a>(
+        code: &str,
+        input_data: Option<&'a [u8]>,
+    ) -> Interpreter<Vec<u8>, &'a [u8]> {
+        let output_handle: Vec<u8> = Vec::new();
+        let input_handle = input_data.unwrap_or("".as_bytes());
+
+        let mut interpreter =
+            Interpreter::new(code, output_handle, input_handle, None, None).unwrap();
+        interpreter.execute().unwrap();
+        interpreter
+    }
+
     mod initialization {
         use super::*;
 
@@ -417,110 +436,43 @@ mod tests {
 
             #[test]
             fn test_hello_world() {
-                let mut output_handle: Vec<u8> = Vec::new();
-                {
-                    let input_handle = io::stdin();
-                    let mut interpreter = Interpreter::new(
-                        "64+\"!dlroW ,olleH\">:#,_@",
-                        &mut output_handle,
-                        input_handle.lock(),
-                        None,
-                        None,
-                    )
-                    .unwrap();
-
-                    interpreter.execute().unwrap();
-                }
-                assert_eq!(output_handle, "Hello, World!\n".as_bytes());
+                let interpreter = setup_interpreter("64+\"!dlroW ,olleH\">:#,_@", None);
+                assert_eq!(interpreter.output_handle, "Hello, World!\n".as_bytes());
             }
 
             #[test]
             fn test_factorial() {
-                let mut output_handle = Vec::new();
-                {
-                    let input_handle = "5".as_bytes();
-                    let mut interpreter = Interpreter::new(
-                        "&>:1-:v v *_$.@\n ^    _$>\\:^",
-                        &mut output_handle,
-                        input_handle,
-                        None,
-                        None,
-                    )
-                    .unwrap();
-
-                    interpreter.execute().unwrap();
-                }
-                assert_eq!(output_handle, "120 ".as_bytes());
+                let interpreter =
+                    setup_interpreter("&>:1-:v v *_$.@\n ^    _$>\\:^", Some("5".as_bytes()));
+                assert_eq!(interpreter.output_handle, "120 ".as_bytes());
             }
 
             #[test]
             fn test_sieve_of_eratosthenes() {
-                let mut output_handle = Vec::new();
-                {
-                    let input_handle = io::stdin();
-
-                    let mut interpreter = Interpreter::new(
-                        "2>:3g\" \"-!v\\  g30          <\n |!`\"O\":+1_:.:03p>03g+:\"O\"`|\n @               ^  p3\\\" \":<\n2 234567890123456789012345678901234567890123456789012345678901234567890123456789",
-                        &mut output_handle,
-                        input_handle.lock(),
-                        None,
-                        None,
-                    )
-                    .unwrap();
-
-                    interpreter.execute().unwrap();
-                }
+                let interpreter = setup_interpreter("2>:3g\" \"-!v\\  g30          <\n |!`\"O\":+1_:.:03p>03g+:\"O\"`|\n @               ^  p3\\\" \":<\n2 234567890123456789012345678901234567890123456789012345678901234567890123456789", None);
 
                 assert_eq!(
-                    output_handle,
+                    interpreter.output_handle,
                     "2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 ".as_bytes()
                 );
             }
 
             #[test]
             fn test_quine_one() {
-                let mut output_handle = Vec::new();
-                {
-                    let input_handle = io::stdin();
-
-                    let mut interpreter = Interpreter::new(
-                        "01->1# +# :# 0# g# ,# :# 5# 8# *# 4# +# -# _@",
-                        &mut output_handle,
-                        input_handle.lock(),
-                        None,
-                        None,
-                    )
-                    .unwrap();
-
-                    interpreter.execute().unwrap();
-                }
-
+                let interpreter =
+                    setup_interpreter("01->1# +# :# 0# g# ,# :# 5# 8# *# 4# +# -# _@", None);
                 assert_eq!(
-                    output_handle,
+                    interpreter.output_handle,
                     "01->1# +# :# 0# g# ,# :# 5# 8# *# 4# +# -# _@".as_bytes()
                 );
             }
 
             #[test]
             fn test_quine_two() {
-                let mut output_handle = Vec::new();
-                {
-                    let input_handle = io::stdin();
-
-                    let mut interpreter = Interpreter::new(
-                        "0 v\n \"<@_ #! #: #,<*2-1*92,*84,*25,+*92*4*55.0",
-                        &mut output_handle,
-                        input_handle.lock(),
-                        None,
-                        None,
-                    )
-                    .unwrap();
-
-                    interpreter.execute().unwrap();
-                }
-
+                let interpreter =
+                    setup_interpreter("0 v\n \"<@_ #! #: #,<*2-1*92,*84,*25,+*92*4*55.0", None);
                 assert_eq!(
-                    output_handle,
+                    interpreter.output_handle,
                     "0 v\n \"<@_ #! #: #,<*2-1*92,*84,*25,+*92*4*55.0 ".as_bytes()
                 );
             }
@@ -528,24 +480,9 @@ mod tests {
             #[should_panic]
             #[test]
             fn test_quine_three() {
-                let mut output_handle = Vec::new();
-                {
-                    let input_handle = io::stdin();
-
-                    let mut interpreter = Interpreter::new(
-                        ":0g,:\"~\"`#@_1+0\"Quines are Fun\">_",
-                        &mut output_handle,
-                        input_handle.lock(),
-                        None,
-                        None,
-                    )
-                    .unwrap();
-
-                    interpreter.execute().unwrap();
-                }
-
+                let interpreter = setup_interpreter(":0g,:\"~\"`#@_1+0\"Quines are Fun\">_", None);
                 assert_eq!(
-                    output_handle,
+                    interpreter.output_handle,
                     ":0g,:\"~\"`#@_1+0\"Quines are Fun\">_".as_bytes()
                 );
             }
@@ -553,10 +490,410 @@ mod tests {
 
         mod individual_commands {
             use super::*;
-        }
 
-        mod special_cases {
-            use super::*;
+            mod unary_operators {
+                use super::*;
+
+                mod not_operator {
+                    use super::*;
+
+                    #[test]
+                    fn test_true_value() {
+                        let mut interpreter = setup_interpreter("5@", None);
+                        let result = interpreter.run_unary_operation('!');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &0);
+                    }
+
+                    #[test]
+                    fn test_false_value() {
+                        let mut interpreter = setup_interpreter("0@", None);
+                        let result = interpreter.run_unary_operation('!');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &1);
+                    }
+                }
+
+                mod horizontal_if {
+                    use super::*;
+
+                    #[test]
+                    fn test_evaluates_to_true() {
+                        let mut interpreter = setup_interpreter("0@", None);
+                        let result = interpreter.run_unary_operation('_');
+                        assert!(result.is_ok());
+                        assert_eq!(
+                            interpreter.playfield.program_counter_direction,
+                            Direction::Right
+                        );
+                    }
+
+                    #[test]
+                    fn test_evaluates_to_false() {
+                        let mut interpreter = setup_interpreter("9@", None);
+                        let result = interpreter.run_unary_operation('_');
+                        assert!(result.is_ok());
+                        assert_eq!(
+                            interpreter.playfield.program_counter_direction,
+                            Direction::Left
+                        );
+                    }
+                }
+
+                mod vertical_if {
+                    use super::*;
+
+                    #[test]
+                    fn test_evaluates_to_true() {
+                        let mut interpreter = setup_interpreter("0@", None);
+                        let result = interpreter.run_unary_operation('|');
+                        assert!(result.is_ok());
+                        assert_eq!(
+                            interpreter.playfield.program_counter_direction,
+                            Direction::Down
+                        );
+                    }
+
+                    #[test]
+                    fn test_evaluates_to_false() {
+                        let mut interpreter = setup_interpreter("9@", None);
+                        let result = interpreter.run_unary_operation('|');
+                        assert!(result.is_ok());
+                        assert_eq!(
+                            interpreter.playfield.program_counter_direction,
+                            Direction::Up
+                        );
+                    }
+                }
+
+                #[test]
+                fn test_duplicate() {
+                    let mut interpreter = setup_interpreter("5@", None);
+                    let result = interpreter.run_unary_operation(':');
+                    assert!(result.is_ok());
+                    assert_eq!(interpreter.stack, vec![5, 5]);
+                }
+
+                #[test]
+                fn test_pop() {
+                    let mut interpreter = setup_interpreter("5@", None);
+                    let result = interpreter.run_unary_operation('$');
+                    assert!(result.is_ok());
+                    assert_eq!(interpreter.stack, vec![]);
+                }
+
+                #[test]
+                fn test_write_integer() {
+                    let mut interpreter = setup_interpreter("5@", None);
+                    let result = interpreter.run_unary_operation('.');
+                    assert!(result.is_ok());
+                    assert_eq!(interpreter.output_handle, "5 ".as_bytes());
+                }
+
+                mod write_character {
+                    use super::*;
+
+                    #[test]
+                    fn test_basic() {
+                        let mut interpreter = setup_interpreter("\"a\"@", None);
+                        let result = interpreter.run_unary_operation(',');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.output_handle, "a".as_bytes());
+                    }
+
+                    #[test]
+                    fn test_non_printable_character() {
+                        let mut interpreter = setup_interpreter("55+@", None);
+                        let result = interpreter.run_unary_operation(',');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.output_handle, "\n".as_bytes());
+                    }
+
+                    #[test]
+                    fn test_special_characters() {
+                        let mut interpreter = setup_interpreter("\"á\"@", None);
+                        let result = interpreter.run_unary_operation(',');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.output_handle, "á".as_bytes());
+                    }
+                }
+
+            }
+
+            mod binary_operators {
+                use super::*;
+
+                mod addition {
+                    use super::*;
+
+                    #[test]
+                    fn test_basic() {
+                        let mut interpreter = setup_interpreter("55@", None);
+                        let result = interpreter.run_binary_operation('+');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &10);
+                    }
+
+                    #[test]
+                    fn test_only_one_operand() {
+                        let mut interpreter = setup_interpreter("5@", None);
+                        let result = interpreter.run_binary_operation('+');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &5);
+                    }
+
+                    #[test]
+                    fn test_only_no_operands() {
+                        let mut interpreter = setup_interpreter("@", None);
+                        let result = interpreter.run_binary_operation('+');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &0);
+                    }
+                }
+
+                mod subtraction {
+                    use super::*;
+
+                    #[test]
+                    fn test_basic() {
+                        let mut interpreter = setup_interpreter("55@", None);
+                        let result = interpreter.run_binary_operation('-');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &0);
+                    }
+
+                    #[test]
+                    fn test_negative_result() {
+                        let mut interpreter = setup_interpreter("57@", None);
+                        let result = interpreter.run_binary_operation('-');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &-2);
+                    }
+                }
+
+                #[test]
+                fn test_multiplication() {
+                    let mut interpreter = setup_interpreter("56@", None);
+                    let result = interpreter.run_binary_operation('*');
+                    assert!(result.is_ok());
+                    assert_eq!(interpreter.stack.last().unwrap(), &30);
+                }
+
+                mod division {
+                    use super::*;
+
+                    #[test]
+                    fn test_basic() {
+                        let mut interpreter = setup_interpreter("62@", None);
+                        let result = interpreter.run_binary_operation('/');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &3);
+                    }
+
+                    #[test]
+                    fn test_integer_division() {
+                        let mut interpreter = setup_interpreter("72@", None);
+                        let result = interpreter.run_binary_operation('/');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &3);
+                    }
+
+                    #[test]
+                    fn test_division_by_zero() {
+                        let mut interpreter = setup_interpreter("60@", None);
+                        let result = interpreter.run_binary_operation('/');
+                        assert!(result.is_err());
+                    }
+                }
+
+                mod modulo {
+                    use super::*;
+
+                    #[test]
+                    fn test_basic() {
+                        let mut interpreter = setup_interpreter("64@", None);
+                        let result = interpreter.run_binary_operation('%');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &2);
+                    }
+
+                    #[test]
+                    fn test_modulo_by_zero() {
+                        let mut interpreter = setup_interpreter("60@", None);
+                        let result = interpreter.run_binary_operation('%');
+                        assert!(result.is_err());
+                    }
+                }
+
+                mod greater_than {
+                    use super::*;
+
+                    #[test]
+                    fn test_basic() {
+                        let mut interpreter = setup_interpreter("65@", None);
+                        let result = interpreter.run_binary_operation('`');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &1);
+                    }
+
+                    #[test]
+                    fn test_false_value() {
+                        let mut interpreter = setup_interpreter("56@", None);
+                        let result = interpreter.run_binary_operation('`');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &0);
+                    }
+
+                    #[test]
+                    fn test_equal_values() {
+                        let mut interpreter = setup_interpreter("66@", None);
+                        let result = interpreter.run_binary_operation('`');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &0);
+                    }
+                }
+
+                #[test]
+                fn test_swap() {
+                    let mut interpreter = setup_interpreter("65@", None);
+                    let result = interpreter.run_binary_operation('\\');
+                    assert!(result.is_ok());
+                    assert_eq!(interpreter.stack, vec![5, 6]);
+                }
+
+                mod get {
+                    use super::*;
+
+                    #[test]
+                    fn test_basic() {
+                        let mut interpreter = setup_interpreter("49v\n  >10@", None);
+                        let result = interpreter.run_binary_operation('g');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.stack.last().unwrap(), &57);
+                    }
+
+                    #[test]
+                    fn test_out_of_bounds() {
+                        let mut interpreter = setup_interpreter("49v\n  >15@", None);
+                        let result = interpreter.run_binary_operation('g');
+                        assert!(result.is_err());
+                    }
+                }
+            }
+
+            mod other_operators {
+                use super::*;
+
+                #[test]
+                fn test_noop() {
+                    let mut interpreter = setup_interpreter("5@", None);
+                    let result = interpreter.run_other_operation(' ');
+                    assert!(result.is_ok());
+                    assert_eq!(interpreter.stack.last().unwrap(), &5);
+                }
+
+                #[test]
+                fn test_direction_right() {
+                    let mut interpreter = setup_interpreter("@", None);
+                    let result = interpreter.run_other_operation('>');
+                    assert!(result.is_ok());
+                    assert_eq!(
+                        interpreter.playfield.program_counter_direction,
+                        Direction::Right
+                    );
+                }
+
+                #[test]
+                fn test_direction_left() {
+                    let mut interpreter = setup_interpreter("@", None);
+                    let result = interpreter.run_other_operation('<');
+                    assert!(result.is_ok());
+                    assert_eq!(
+                        interpreter.playfield.program_counter_direction,
+                        Direction::Left
+                    );
+                }
+
+                #[test]
+                fn test_direction_down() {
+                    let mut interpreter = setup_interpreter("@", None);
+                    let result = interpreter.run_other_operation('v');
+                    assert!(result.is_ok());
+                    assert_eq!(
+                        interpreter.playfield.program_counter_direction,
+                        Direction::Down
+                    );
+                }
+
+                #[test]
+                fn test_direction_up() {
+                    let mut interpreter = setup_interpreter("@", None);
+                    let result = interpreter.run_other_operation('^');
+                    assert!(result.is_ok());
+                    assert_eq!(
+                        interpreter.playfield.program_counter_direction,
+                        Direction::Up
+                    );
+                }
+
+                #[test]
+                fn test_random_direction() {
+                    let mut interpreter = setup_interpreter("@", None);
+                    let result = interpreter.run_other_operation('?');
+                    assert!(result.is_ok());
+                }
+
+                #[test]
+                fn test_string_mode_change() {
+                    let mut interpreter = setup_interpreter("5@", None);
+                    let result = interpreter.run_other_operation('"');
+                    assert!(result.is_ok());
+                    assert_eq!(interpreter.mode, Mode::String);
+                }
+
+                #[test]
+                fn test_bridge_mode_change() {
+                    let mut interpreter = setup_interpreter("5@", None);
+                    let result = interpreter.run_other_operation('#');
+                    assert!(result.is_ok());
+                    assert_eq!(interpreter.mode, Mode::Bridge);
+                }
+
+                mod put {
+                    use super::*;
+
+                    #[test]
+                    fn test_basic() {
+                        let mut interpreter = setup_interpreter("49v\n  >510@", None);
+                        let result = interpreter.run_other_operation('p');
+                        assert!(result.is_ok());
+                        assert_eq!(interpreter.playfield.code_map[0][1], '\u{5}');
+                    }
+
+                    #[test]
+                    fn test_out_of_bounds() {
+                        let mut interpreter = setup_interpreter("49v\n  >515@", None);
+                        let result = interpreter.run_other_operation('p');
+                        assert!(result.is_err());
+                    }
+                }
+
+                #[test]
+                fn test_read_integer() {
+                    let mut interpreter = setup_interpreter("@", Some("5".as_bytes()));
+                    let result = interpreter.run_other_operation('&');
+                    assert!(result.is_ok());
+                    assert_eq!(interpreter.stack.last().unwrap(), &5);
+                }
+
+                #[test]
+                fn test_read_character() {
+                    let mut interpreter = setup_interpreter("@", Some("5".as_bytes()));
+                    let result = interpreter.run_other_operation('~');
+                    assert!(result.is_ok());
+                    assert_eq!(interpreter.stack.last().unwrap(), &53);
+                }
+            }
         }
     }
 
