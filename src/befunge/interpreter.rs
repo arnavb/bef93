@@ -1182,11 +1182,75 @@ mod tests {
                     assert!(result.is_ok());
                     assert_eq!(interpreter.mode, Mode::Bridge);
                 }
-            }
-        }
 
-        mod special_cases {
-            use super::*;
+                mod put {
+                    use super::*;
+
+                    #[test]
+                    fn test_basic() {
+                        let input_handle = io::stdin();
+                        let mut interpreter = Interpreter::new(
+                            "49v\n  >510@",
+                            io::stdout(),
+                            input_handle.lock(),
+                            None,
+                            None,
+                        )
+                        .unwrap();
+
+                        interpreter.execute().unwrap();
+
+                        let result = interpreter.run_other_operation('p');
+                        assert!(result.is_ok());
+                        println!("{:?}", interpreter.playfield.code_map);
+                        assert_eq!(interpreter.playfield.code_map[0][1], '\u{5}');
+                    }
+
+                    #[test]
+                    fn test_out_of_bounds() {
+                        let input_handle = io::stdin();
+                        let mut interpreter = Interpreter::new(
+                            "49v\n  >15@",
+                            io::stdout(),
+                            input_handle.lock(),
+                            None,
+                            None,
+                        )
+                        .unwrap();
+
+                        interpreter.execute().unwrap();
+
+                        let result = interpreter.run_other_operation('p');
+                        assert!(result.is_err());
+                    }
+                }
+
+                #[test]
+                fn test_read_integer() {
+                    let mut output_handle = Vec::new();
+                    let input_handle = "5".as_bytes();
+                    let mut interpreter =
+                        Interpreter::new("@", &mut output_handle, input_handle, None, None)
+                            .unwrap();
+
+                    let result = interpreter.run_other_operation('&');
+                    assert!(result.is_ok());
+                    assert_eq!(interpreter.stack.last().unwrap(), &5);
+                }
+
+                #[test]
+                fn test_read_character() {
+                    let mut output_handle = Vec::new();
+                    let input_handle = "5".as_bytes();
+                    let mut interpreter =
+                        Interpreter::new("@", &mut output_handle, input_handle, None, None)
+                            .unwrap();
+
+                    let result = interpreter.run_other_operation('~');
+                    assert!(result.is_ok());
+                    assert_eq!(interpreter.stack.last().unwrap(), &53);
+                }
+            }
         }
     }
 
