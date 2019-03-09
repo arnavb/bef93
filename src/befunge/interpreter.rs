@@ -82,7 +82,6 @@ where
     //   will be returned.
     pub fn execute(&mut self) -> Result<(), Box<StdError>> {
         loop {
-            println!("{:?}", self.stack);
             // Empty program is an infinite loop
             if self.playfield.dimensions.x == 0 {
                 continue;
@@ -1202,7 +1201,6 @@ mod tests {
 
                         let result = interpreter.run_other_operation('p');
                         assert!(result.is_ok());
-                        println!("{:?}", interpreter.playfield.code_map);
                         assert_eq!(interpreter.playfield.code_map[0][1], '\u{5}');
                     }
 
