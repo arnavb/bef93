@@ -294,6 +294,21 @@ mod tests {
     use super::*;
     use std::io;
 
+    // fn setup_interpreter(code: &str) -> Interpreter<io::Stdout, io::StdinLock> {
+    //     let input_handle = io::stdin();
+    //     let interpreter = Interpreter::new(code, io::stdout(), input_handle.lock(), None, None);
+    //     interpreter.unwrap()
+    // }
+
+    fn setup_interpreter<'a>(code: &str, input_data: Option<&'a [u8]>) -> Interpreter<Vec<u8>, &'a [u8]> {
+        let mut output_handle: Vec<u8> = Vec::new();
+        let input_handle = input_data.unwrap_or("".as_bytes());
+
+        let mut interpreter = Interpreter::new(code, output_handle, input_handle, None, None).unwrap();
+        interpreter.execute().unwrap();
+        interpreter
+    }
+
     mod initialization {
         use super::*;
 
