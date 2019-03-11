@@ -240,7 +240,7 @@ mod tests {
         }
 
         #[test]
-        fn one_longer_row() {
+        fn test_one_longer_row() {
             let playfield =
                 Playfield::new("l\nww\nk", Coord { x: 0, y: 0 }, Direction::Right).unwrap();
 
@@ -254,7 +254,7 @@ mod tests {
         }
 
         #[test]
-        fn one_longer_column() {
+        fn test_one_longer_column() {
             let playfield =
                 Playfield::new("ldd\nwwe\ng", Coord { x: 0, y: 0 }, Direction::Right).unwrap();
 
@@ -272,7 +272,7 @@ mod tests {
         }
 
         #[test]
-        fn other_attributes() {
+        fn test_tother_attributes() {
             let playfield =
                 Playfield::new("ldd\nwwe\ng", Coord { x: 0, y: 1 }, Direction::Left).unwrap();
 
