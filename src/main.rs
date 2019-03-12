@@ -33,17 +33,24 @@ fn main() {
     if let Err(err) = cli() {
         exit_code = if let Some(clap_err) = err.downcast_ref::<clap::Error>() {
             // Clap CLI errors
-
-            eprint!("{}", clap_err);
-
-            io::stdout()
-                .flush()
-                .unwrap_or_else(|_| eprintln!("Unable to flush stdout!"));
-
             // Don't exit with 1 if help or version information are being displayed
             match clap_err.kind {
-                clap::ErrorKind::HelpDisplayed | clap::ErrorKind::VersionDisplayed => 0,
-                _ => 1,
+                clap::ErrorKind::HelpDisplayed | clap::ErrorKind::VersionDisplayed => {
+                    print!("{}", clap_err);
+
+                    io::stdout()
+                        .flush()
+                        .unwrap_or_else(|_| eprintln!("Unable to flush stdout!"));
+                    0
+                }
+                _ => {
+                    eprint!("{}", clap_err);
+
+                    io::stdout()
+                        .flush()
+                        .unwrap_or_else(|_| eprintln!("Unable to flush stdout!"));
+                    1
+                }
             }
         } else if let Some(befunge_err) = err.downcast_ref::<befunge::Error>() {
             // Befunge-93 code errors
