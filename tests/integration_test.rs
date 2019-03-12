@@ -87,7 +87,12 @@ fn test_file_not_found() {
 #[test]
 fn test_invalid_file_extension() {
     let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME")).unwrap();
-    cmd.arg(current_dir().unwrap().join("tests").join("integration_test.rs"));
+    cmd.arg(
+        current_dir()
+            .unwrap()
+            .join("tests")
+            .join("integration_test.rs"),
+    );
 
     cmd.assert().failure().code(1);
 }
