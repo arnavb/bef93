@@ -17,8 +17,7 @@ FLAGS:
     -V, --version    Prints version information
 
 ARGS:
-    <FILE>    A file with Befunge-93 source code
-";
+    <FILE>    A file with Befunge-93 source code\n";
 
 const EXPECTED_VERSION_MESSAGE: &str = "bef93 0.1.0\n";
 
