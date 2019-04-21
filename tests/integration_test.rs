@@ -26,9 +26,7 @@ fn test_long_version() {
     let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME")).unwrap();
     cmd.arg("--version");
 
-    cmd.assert()
-        .success()
-        .code(0);
+    cmd.assert().success().code(0);
 }
 
 #[test]
@@ -36,9 +34,7 @@ fn test_short_version() {
     let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME")).unwrap();
     cmd.arg("-V");
 
-    cmd.assert()
-        .success()
-        .code(0);
+    cmd.assert().success().code(0);
 }
 
 #[test]
