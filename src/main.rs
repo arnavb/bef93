@@ -92,7 +92,7 @@ fn cli() -> Result<(), Box<error::Error>> {
         Some(extension) => {
             if !(extension == "bf" || extension == "b93") {
                 return Err(
-                    "The file extension of the passed file was not '.bf' or '.b93'!".into()
+                    "The file extension of the passed file was not '.bf' or '.b93'!".into(),
                 );
             }
         }
