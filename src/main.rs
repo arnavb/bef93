@@ -91,7 +91,9 @@ fn cli() -> Result<(), Box<error::Error>> {
     match resolved_filepath.extension() {
         Some(extension) => {
             if !(extension == "bf" || extension == "b93") {
-                return Err("The file extension of the passed file was not '.bf' or '.b93'!".into());
+                return Err(
+                    "The file extension of the passed file was not '.bf' or '.b93'!".into(),
+                );
             }
         }
         None => return Err("The file extension of the passed file was not found!".into()),
