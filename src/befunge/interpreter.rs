@@ -617,7 +617,6 @@ mod tests {
                         assert_eq!(interpreter.output_handle, "á".as_bytes());
                     }
                 }
-
             }
 
             mod binary_operators {
