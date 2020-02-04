@@ -80,7 +80,7 @@ where
     //
     // 2. If an unexpected command is met while parsing in command mode, a BefungeError
     //   will be returned.
-    pub fn execute(&mut self) -> Result<(), Box<StdError>> {
+    pub fn execute(&mut self) -> Result<(), Box<dyn StdError>> {
         loop {
             // Empty program is an infinite loop
             if self.playfield.dimensions.x == 0 {
@@ -136,7 +136,7 @@ where
     //
     // 3. If the output handle cannot be flushed, the respective io::Error will be
     //   returned.
-    fn run_unary_operation(&mut self, operation: char) -> Result<(), Box<StdError>> {
+    fn run_unary_operation(&mut self, operation: char) -> Result<(), Box<dyn StdError>> {
         let value = self.stack.pop().unwrap_or(0);
 
         match operation {
@@ -179,7 +179,7 @@ where
     //   a BefungeError will be returned.
     //
     // 3. Any errors propagated up from `self.playfield.get_character_at`.
-    fn run_binary_operation(&mut self, operation: char) -> Result<(), Box<StdError>> {
+    fn run_binary_operation(&mut self, operation: char) -> Result<(), Box<dyn StdError>> {
         let (a, b) = (self.stack.pop().unwrap_or(0), self.stack.pop().unwrap_or(0));
 
         match operation {
@@ -220,7 +220,7 @@ where
     //
     // 4. For the ~ command, if a non-char value is entered, a BefungeError will
     //   be returned.
-    fn run_other_operation(&mut self, operation: char) -> Result<(), Box<StdError>> {
+    fn run_other_operation(&mut self, operation: char) -> Result<(), Box<dyn StdError>> {
         match operation {
             ' ' => (),
             '>' => self.playfield.program_counter_direction = Direction::Right,
@@ -276,7 +276,7 @@ where
 }
 
 // TODO: Convert errors to BefungeErrors
-fn convert_int_to_char(value: i64) -> Result<char, Box<StdError>> {
+fn convert_int_to_char(value: i64) -> Result<char, Box<dyn StdError>> {
     if value < 0 || value > 255 {
         return Err(BefungeError(format!(
             "{} is not a valid ASCII value (between 0 and 255 inclusive)!",

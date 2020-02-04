@@ -73,7 +73,7 @@ fn main() {
     process::exit(exit_code);
 }
 
-fn cli() -> Result<(), Box<error::Error>> {
+fn cli() -> Result<(), Box<dyn error::Error>> {
     let matches = clap::App::new(crate_name!())
         .version(crate_version!())
         .author(crate_authors!())
@@ -122,7 +122,7 @@ fn cli() -> Result<(), Box<error::Error>> {
 
 // Resolves a passed filepath to either a relative or absolute location.
 // If the file does not exist or refer to a file, a io::Error error will be returned.
-fn resolve_filepath(path: &str) -> Result<PathBuf, Box<error::Error>> {
+fn resolve_filepath(path: &str) -> Result<PathBuf, Box<dyn error::Error>> {
     let mut result = PathBuf::from(path);
 
     if !result.exists() || !result.is_file() {

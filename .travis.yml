@@ -11,48 +11,48 @@ matrix:
     - os: linux
       rust: stable
       env: TARGET=x86_64-unknown-linux-gnu
-    
+
     - os: linux
       rust: stable
       before_script:
         - sudo apt-get update
         - sudo apt-get install -y gcc-4.8 cpp-4.8 gcc-multilib
       env: TARGET=i686-unknown-linux-gnu
-    
+
     - os: osx
       rust: stable
       env: TARGET=x86_64-apple-darwin
-    
+
     - os: windows
       rust: stable
       env: TARGET=x86_64-pc-windows-msvc
-    
+
     - os: windows
       rust: stable
       env: TARGET=i686-pc-windows-msvc
-    
+
     - os: linux
-      rust: 1.30.0
+      rust: 1.41.0
       script: cargo test --release
-    
+
     - name: "clippy"
       os: linux
       rust: stable
       script:
         - rustup component add clippy
         - cargo clippy
-    
+
     - name: "rustfmt"
       os: linux
       rust: stable
       script:
         - rustup component add rustfmt
         - cargo fmt --all -- --check
-    
+
     - os: linux
       rust: beta
       script: cargo test --release
-    
+
     - os: linux
       rust: nightly
       script: cargo test --release
@@ -65,7 +65,7 @@ matrix:
 script:
   - rustup target install $TARGET
   - cargo test --release --target=$TARGET
-  
+
 before_deploy:
   - cargo build --release --target=$TARGET
   - mkdir $CRATE_NAME-$TRAVIS_TAG-$TARGET
@@ -79,7 +79,7 @@ before_deploy:
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then tar czf $CRATE_NAME-$TRAVIS_TAG-$TARGET.tar.gz $CRATE_NAME-$TRAVIS_TAG-$TARGET; fi
   - if [[ $TRAVIS_OS_NAME == "osx" ]]; then zip -r $CRATE_NAME-$TRAVIS_TAG-$TARGET.zip $CRATE_NAME-$TRAVIS_TAG-$TARGET; fi
   - if [[ $TRAVIS_OS_NAME == "windows" ]]; then 7z a -tzip $CRATE_NAME-$TRAVIS_TAG-$TARGET.zip $CRATE_NAME-$TRAVIS_TAG-$TARGET; fi
-    
+
 deploy:
   provider: releases
   api_key:
