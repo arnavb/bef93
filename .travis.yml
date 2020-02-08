@@ -90,9 +90,3 @@ deploy:
   on:
     tags: true
     condition: $TRAVIS_RUST_VERSION = stable
-
-branches:
-  only:
-    - master
-    # Tags
-    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
