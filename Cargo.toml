@@ -7,7 +7,7 @@ authors = ["Arnav Borborah <arnavborborah11@gmail.com>"]
 rand = "0.7.3"
 
 [dependencies.clap]
-version = "2.33.0"
+version = "2.33.2"
 default-features = false
 features = ["suggestions"]
 
